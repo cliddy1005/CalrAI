@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		1054E6A02E3AC5E2006FBACF /* CalorieTrackerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1054E69F2E3AC5D5006FBACF /* CalorieTrackerApp.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		1054E6822E3AC532006FBACF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,6 +31,7 @@
 		1054E66D2E3AC530006FBACF /* FitBite.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FitBite.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1054E6812E3AC532006FBACF /* FitBiteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FitBiteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1054E68B2E3AC532006FBACF /* FitBiteUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FitBiteUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		1054E69F2E3AC5D5006FBACF /* CalorieTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalorieTrackerApp.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -88,6 +93,7 @@
 		1054E6642E3AC530006FBACF = {
 			isa = PBXGroup;
 			children = (
+				1054E69F2E3AC5D5006FBACF /* CalorieTrackerApp.swift */,
 				1054E66F2E3AC530006FBACF /* FitBite */,
 				1054E6842E3AC532006FBACF /* FitBiteTests */,
 				1054E68E2E3AC532006FBACF /* FitBiteUITests */,
@@ -249,6 +255,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1054E6A02E3AC5E2006FBACF /* CalorieTrackerApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -295,6 +302,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = FitBite/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "We use the camera to scan food barcodes.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -326,6 +334,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = FitBite/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "We use the camera to scan food barcodes.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
