@@ -1,6 +1,6 @@
 //
-//  CalorieTrackerApp.swift
-//  FitBite  v6.1.2  (search-fix + kcal bug-fix)
+//  CalrAI.swift
+//  CalrAI  v1.0  (English-only search, meals, scanner)
 //  iOS 17+, Xcode 15
 //
 
@@ -8,16 +8,16 @@ import SwiftUI
 import VisionKit
 
 //────────────────────────────────────────────
-// MARK: Constants
+// MARK: – Constants®
 //────────────────────────────────────────────
 fileprivate let kOFF = "https://world.openfoodfacts.net"
-fileprivate let kUA  = "FitBite-Demo/6.1.2"
+fileprivate let kUA  = "CalrAI-Demo/1.0"
 
 //────────────────────────────────────────────
-// MARK: User profile & macro calculator
+// MARK: – User profile & macro-calculator
 //────────────────────────────────────────────
 struct UserProfile: Codable {
-    enum Sex:  String, CaseIterable, Identifiable, Codable { case male, female; var id: Self { self } }
+    enum Sex: String, CaseIterable, Identifiable, Codable { case male, female; var id: Self { self } }
     enum Activity: String, CaseIterable, Identifiable, Codable {
         case sedentary, light, moderate, active, veryActive
         var factor: Double {
@@ -40,64 +40,60 @@ struct UserProfile: Codable {
     
     func macroTargets() -> (kcal: Double, p: Double, f: Double, c: Double) {
         let w = Double(weightKg), h = Double(heightCm), a = Double(age)
-        let bmr = sex == .male ? (10 * w + 6.25 * h - 5 * a + 5)
-                               : (10 * w + 6.25 * h - 5 * a - 161)
+        let bmr = sex == .male ? (10*w + 6.25*h - 5*a + 5)
+                               : (10*w + 6.25*h - 5*a - 161)
         var kcal = bmr * activity.factor
         if goal == .lose { kcal *= 0.85 }
         if goal == .gain { kcal *= 1.15 }
         let lb = w * 2.20462
         let pG = lb * 1.0
         let fG = lb * 0.4
-        let cG = max(0, (kcal - pG * 4 - fG * 9) / 4)
+        let cG = max(0, (kcal - pG*4 - fG*9) / 4)
         return (kcal.rounded(), pG.rounded(), fG.rounded(), cG.rounded())
     }
 }
 
 //────────────────────────────────────────────
-// MARK: App & global view-model
+// MARK: – App & global view-model
 //────────────────────────────────────────────
 @main
-struct CalorieTrackerApp: App {
-    @StateObject private var vm = CalorieTrackerVM()
+struct CalrAIApp: App {
+    @StateObject private var vm = CalrAIVM()
     var body: some Scene { WindowGroup { RootView().environmentObject(vm) } }
 }
 
 @MainActor
-final class CalorieTrackerVM: ObservableObject {
-    // Settings
+final class CalrAIVM: ObservableObject {
+    // Profile persistence
     @AppStorage("userProfile") private var stored = ""
     var profile: UserProfile {
         get { (try? JSONDecoder().decode(UserProfile.self, from: Data(stored.utf8))) ?? UserProfile() }
         set { stored = String(data: try! JSONEncoder().encode(newValue), encoding: .utf8)! }
     }
     
-    // Meals
+    // Meal buckets
     enum Meal: String, CaseIterable, Identifiable, Codable {
         case breakfast, lunch, dinner, snacks
         var id: Self { self }
         var title: String { rawValue.capitalized }
     }
     
-    // Log
+    // Log & UI
     @Published var entries: [FoodEntry] = []
-    
-    // UI
     @Published var activeMeal: Meal?
     @Published var showScanner  = false
     @Published var showSearch   = false
     @Published var showSettings = false
     @Published var errorMessage: String?
+    @Published var exerciseKcal = 0   // placeholder
     
-    // Exercise placeholder
-    @Published var exerciseKcal = 0
-    
-    // MARK: CRUD
+    // CRUD
     func append(_ p: Product, to meal: Meal) {
         entries.append(.init(product: p, grams: p.servingSizeGrams ?? 100, meal: meal))
     }
-    func delete(at set: IndexSet, in meal: Meal) {
+    func delete(at offsets: IndexSet, in meal: Meal) {
         let slice = entriesFor(meal)
-        let global = set.map { idx in entries.firstIndex(of: slice[idx])! }
+        let global = offsets.map { idx in entries.firstIndex(of: slice[idx])! }
         entries.remove(atOffsets: IndexSet(global))
     }
     func update(id: UUID, grams: Double) {
@@ -105,14 +101,14 @@ final class CalorieTrackerVM: ObservableObject {
     }
     func entriesFor(_ meal: Meal) -> [FoodEntry] { entries.filter { $0.meal == meal } }
     
-    // Scanner helper
+    // Barcode → product
     func add(barcode: String) async {
         guard let m = activeMeal else { return }
         do { let p = try await API.product(code: barcode); append(p, to: m) }
         catch { errorMessage = error.localizedDescription }
     }
     
-    // Totals & goals
+    // Totals & macro rings
     var totalKcal: Int { entries.reduce(0) { $0 + Int($1.calories) } }
     var totals: (p: Double, c: Double, f: Double) {
         entries.reduce(into: (0,0,0)) { acc, e in
@@ -132,13 +128,13 @@ final class CalorieTrackerVM: ObservableObject {
 }
 
 //────────────────────────────────────────────
-// MARK: Data models
+// MARK: – Data models
 //────────────────────────────────────────────
 struct FoodEntry: Identifiable, Hashable {
     let id = UUID()
     let product: Product
     var grams: Double
-    let meal: CalorieTrackerVM.Meal
+    let meal: CalrAIVM.Meal
     
     private func of(_ v: Double?) -> Double { (v ?? 0) * grams / 100 }
     var calories: Double { of(product.kcalPer100g) }
@@ -174,10 +170,10 @@ struct Product: Decodable, Hashable {
         carbPer100g    = try n.decodeIfPresent(Double.self, forKey: .carbohydrates_100g)
         
         if let raw = try? p.decodeIfPresent(String.self, forKey: .serving_size) {
-            servingSizeGrams = Self.g(raw)
+            servingSizeGrams = Product.extract(from: raw)
         } else { servingSizeGrams = nil }
     }
-    private static func g(_ s: String) -> Double? {
+    private static func extract(from s: String) -> Double? {
         if let r = s.range(of: #"(\d+(?:[.,]\d+)?)\s*(?:g|gram)"#, options: .regularExpression) {
             let num = s[r].replacingOccurrences(of: "[^0-9.,]", with: "", options: .regularExpression)
             return Double(num.replacingOccurrences(of: ",", with: "."))
@@ -192,14 +188,12 @@ struct ProductLite: Decodable, Identifiable {
     let kcalPer100g: Double?
     let nutriScore: String?
     
-    private enum K: String, CodingKey { case code, product_name_en, product_name,
-                                        nutriscore_grade, nutriments }
+    private enum K: String, CodingKey { case code, product_name_en, nutriscore_grade, nutriments }
     private enum N: String, CodingKey { case energy_kcal_100g = "energy-kcal_100g" }
     init(from d: Decoder) throws {
         let c = try d.container(keyedBy: K.self)
         barcode = try c.decode(String.self, forKey: .code)
-        name = (try? c.decode(String.self, forKey: .product_name_en))
-            ?? (try? c.decode(String.self, forKey: .product_name)) ?? "Unnamed"
+        name = (try? c.decode(String.self, forKey: .product_name_en)) ?? ""
         nutriScore = try? c.decode(String.self, forKey: .nutriscore_grade)
         if let n = try? c.nestedContainer(keyedBy: N.self, forKey: .nutriments) {
             kcalPer100g = try n.decodeIfPresent(Double.self, forKey: .energy_kcal_100g)
@@ -208,10 +202,10 @@ struct ProductLite: Decodable, Identifiable {
 }
 
 //────────────────────────────────────────────
-// MARK: Calorie header
+// MARK: – Calorie banner
 //────────────────────────────────────────────
 struct CalorieHeader: View {
-    @EnvironmentObject var vm: CalorieTrackerVM
+    @EnvironmentObject var vm: CalrAIVM
     private func metric(_ t: String, _ v: Int, _ col: Color = .primary) -> some View {
         VStack(spacing: 1) {
             Text(t).font(.caption2).foregroundColor(.secondary)
@@ -235,7 +229,7 @@ struct CalorieHeader: View {
 }
 
 //────────────────────────────────────────────
-// MARK: Macro dashboard
+// MARK: – Macro rings
 //────────────────────────────────────────────
 struct MacroGoal: Identifiable {
     enum Kind { case carbs, fat, protein }
@@ -272,7 +266,7 @@ struct MacroRing: View {
     }
 }
 struct MacroDashboard: View {
-    @EnvironmentObject var vm: CalorieTrackerVM
+    @EnvironmentObject var vm: CalrAIVM
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 32) { ForEach(vm.macroGoals) { MacroRing(g: $0) } }
@@ -285,22 +279,19 @@ struct MacroDashboard: View {
 }
 
 //────────────────────────────────────────────
-// MARK: Root view
+// MARK: – Root view
 //────────────────────────────────────────────
 struct RootView: View {
-    @EnvironmentObject private var vm: CalorieTrackerVM
+    @EnvironmentObject private var vm: CalrAIVM
     @State private var editing: FoodEntry?
     
-    private func actionRow(icon: String, text: String, meal: CalorieTrackerVM.Meal,
-                           action: @escaping () -> Void) -> some View {
+    private func actionRow(icon: String, text: String, meal: CalrAIVM.Meal,
+                           trigger: @escaping () -> Void) -> some View {
         Button {
             vm.activeMeal = meal
-            action()
+            trigger()
         } label: {
-            HStack {
-                Image(systemName: icon)
-                Text(text)
-            }
+            HStack { Image(systemName: icon); Text(text) }
         }
     }
     
@@ -310,17 +301,15 @@ struct RootView: View {
                 CalorieHeader()
                 MacroDashboard()
                 List {
-                    ForEach(CalorieTrackerVM.Meal.allCases) { meal in
+                    ForEach(CalrAIVM.Meal.allCases) { meal in
                         Section(header: Text(meal.title)) {
                             ForEach(vm.entriesFor(meal)) { e in
                                 VStack(alignment: .leading) {
                                     HStack {
                                         Text(e.product.name)
                                         if let g = e.product.nutriScore {
-                                            Text(g.uppercased())
-                                                .font(.caption2)
-                                                .padding(4)
-                                                .background(Color.gray.opacity(0.2))
+                                            Text(g.uppercased()).font(.caption2)
+                                                .padding(4).background(Color.gray.opacity(0.2))
                                                 .clipShape(Circle())
                                         }
                                     }
@@ -343,11 +332,15 @@ struct RootView: View {
                 }
             }
             .navigationTitle("Today \(vm.totalKcal) kcal")
-            .toolbar { ToolbarItem(placement: .navigationBarTrailing) { Button { vm.showSettings = true } label: { Image(systemName: "gearshape") } } }
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button { vm.showSettings = true } label: { Image(systemName: "gearshape") }
+                }
+            }
             .sheet(isPresented: $vm.showScanner)  { ScannerSheet { code in Task { await vm.add(barcode: code) } } }
-            .sheet(isPresented: $vm.showSearch)   { SearchSheet { p in if let m = vm.activeMeal { vm.append(p, to: m) } } }
+            .sheet(isPresented: $vm.showSearch)   { SearchSheet  { p in if let m = vm.activeMeal { vm.append(p, to: m) } } }
             .sheet(isPresented: $vm.showSettings) { SettingsSheet() }
-            .sheet(item: $editing)                { e in EditSheet(entry: e) { g in vm.update(id: e.id, grams: g) } }
+            .sheet(item: $editing) { e in EditSheet(entry: e) { g in vm.update(id: e.id, grams: g) } }
             .alert("Error",
                    isPresented: Binding(get: { vm.errorMessage != nil },
                                         set: { _ in vm.errorMessage = nil })) {
@@ -358,7 +351,7 @@ struct RootView: View {
 }
 
 //────────────────────────────────────────────
-// MARK: Networking (search fix)
+// MARK: – Networking  (English-only search)
 //────────────────────────────────────────────
 enum API {
     static func product(code: String) async throws -> Product {
@@ -367,15 +360,16 @@ enum API {
     static func search(_ q: String) async throws -> [ProductLite] {
         var c = URLComponents(string: "\(kOFF)/api/v2/search")!
         c.queryItems = [
-            .init(name: "q",         value: q),
-            .init(name: "page_size", value: "20"),
-            .init(name: "lc",        value: "en"),
+            .init(name: "search_terms",   value: q),
+            .init(name: "languages_tags", value: "en"),
+            .init(name: "page_size",      value: "20"),
+            .init(name: "sort_by",        value: "unique_scans_n"),
             .init(name: "fields",
-                  value: "code,product_name_en,product_name,nutriscore_grade,nutriments.energy-kcal_100g")
+                  value: "code,product_name_en,nutriscore_grade,nutriments.energy-kcal_100g")
         ]
         struct Resp: Decodable { let products: [ProductLite] }
         let resp: Resp = try await fetch(c.url!)
-        return resp.products
+        return resp.products.filter { !$0.name.trimmingCharacters(in: .whitespaces).isEmpty }
     }
     private static func fetch<T: Decodable>(_ url: URL) async throws -> T {
         var req = URLRequest(url: url)
@@ -387,7 +381,7 @@ enum API {
 }
 
 //────────────────────────────────────────────
-// MARK: Search sheet
+// MARK: – Search sheet
 //────────────────────────────────────────────
 struct SearchSheet: View {
     @Environment(\.dismiss) private var dismiss
@@ -440,11 +434,11 @@ struct SearchSheet: View {
 }
 
 //────────────────────────────────────────────
-// MARK: Settings sheet
+// MARK: – Settings sheet
 //────────────────────────────────────────────
 struct SettingsSheet: View {
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var vm: CalorieTrackerVM
+    @EnvironmentObject private var vm: CalrAIVM
     @State private var prof = UserProfile()
     var body: some View {
         NavigationStack {
@@ -484,15 +478,17 @@ struct SettingsSheet: View {
 }
 
 //────────────────────────────────────────────
-// MARK: Edit sheet
+// MARK: – Edit sheet
 //────────────────────────────────────────────
 struct EditSheet: View {
     let entry: FoodEntry
     var save: (Double) -> Void
     @Environment(\.dismiss) private var dismiss
+    
     enum Mode: String, CaseIterable, Identifiable { case grams, servings; var id: Self { self } }
     @State private var mode: Mode
     @State private var text: String
+    
     init(entry: FoodEntry, save: @escaping (Double) -> Void) {
         self.entry = entry; self.save = save
         if let s = entry.product.servingSizeGrams {
@@ -503,6 +499,7 @@ struct EditSheet: View {
             _text = State(initialValue: String(Int(entry.grams)))
         }
     }
+    
     var body: some View {
         NavigationStack {
             Form {
@@ -530,7 +527,7 @@ struct EditSheet: View {
 }
 
 //────────────────────────────────────────────
-// MARK: Scanner wrapper
+// MARK: – Barcode scanner wrapper
 //────────────────────────────────────────────
 struct ScannerSheet: UIViewControllerRepresentable {
     var got: (String) -> Void
@@ -555,3 +552,4 @@ struct ScannerSheet: UIViewControllerRepresentable {
         }
     }
 }
+

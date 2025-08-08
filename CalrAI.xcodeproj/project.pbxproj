@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		10E2DFE22E44112200BC9CE9 /* CalrAI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10E2DFE12E44112200BC9CE9 /* CalrAI.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		1054E6822E3AC532006FBACF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -24,38 +28,39 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		1054E66D2E3AC530006FBACF /* FitBite.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FitBite.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		1054E6812E3AC532006FBACF /* FitBiteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FitBiteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		1054E68B2E3AC532006FBACF /* FitBiteUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FitBiteUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		1054E66D2E3AC530006FBACF /* CalrAI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CalrAI.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1054E6812E3AC532006FBACF /* CalrAITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CalrAITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		1054E68B2E3AC532006FBACF /* CalrAIUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CalrAIUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		10E2DFE12E44112200BC9CE9 /* CalrAI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalrAI.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		1054E6932E3AC532006FBACF /* Exceptions for "FitBite" folder in "FitBite" target */ = {
+		1054E6932E3AC532006FBACF /* Exceptions for "CalrAI" folder in "CalrAI" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = 1054E66C2E3AC530006FBACF /* FitBite */;
+			target = 1054E66C2E3AC530006FBACF /* CalrAI */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		1054E66F2E3AC530006FBACF /* FitBite */ = {
+		1054E66F2E3AC530006FBACF /* CalrAI */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				1054E6932E3AC532006FBACF /* Exceptions for "FitBite" folder in "FitBite" target */,
+				1054E6932E3AC532006FBACF /* Exceptions for "CalrAI" folder in "CalrAI" target */,
 			);
-			path = FitBite;
+			path = CalrAI;
 			sourceTree = "<group>";
 		};
-		1054E6842E3AC532006FBACF /* FitBiteTests */ = {
+		1054E6842E3AC532006FBACF /* CalrAITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = FitBiteTests;
+			path = CalrAITests;
 			sourceTree = "<group>";
 		};
-		1054E68E2E3AC532006FBACF /* FitBiteUITests */ = {
+		1054E68E2E3AC532006FBACF /* CalrAIUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = FitBiteUITests;
+			path = CalrAIUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -88,9 +93,10 @@
 		1054E6642E3AC530006FBACF = {
 			isa = PBXGroup;
 			children = (
-				1054E66F2E3AC530006FBACF /* FitBite */,
-				1054E6842E3AC532006FBACF /* FitBiteTests */,
-				1054E68E2E3AC532006FBACF /* FitBiteUITests */,
+				10E2DFE12E44112200BC9CE9 /* CalrAI.swift */,
+				1054E66F2E3AC530006FBACF /* CalrAI */,
+				1054E6842E3AC532006FBACF /* CalrAITests */,
+				1054E68E2E3AC532006FBACF /* CalrAIUITests */,
 				1054E66E2E3AC530006FBACF /* Products */,
 			);
 			sourceTree = "<group>";
@@ -98,9 +104,9 @@
 		1054E66E2E3AC530006FBACF /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				1054E66D2E3AC530006FBACF /* FitBite.app */,
-				1054E6812E3AC532006FBACF /* FitBiteTests.xctest */,
-				1054E68B2E3AC532006FBACF /* FitBiteUITests.xctest */,
+				1054E66D2E3AC530006FBACF /* CalrAI.app */,
+				1054E6812E3AC532006FBACF /* CalrAITests.xctest */,
+				1054E68B2E3AC532006FBACF /* CalrAIUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -108,9 +114,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		1054E66C2E3AC530006FBACF /* FitBite */ = {
+		1054E66C2E3AC530006FBACF /* CalrAI */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1054E6942E3AC532006FBACF /* Build configuration list for PBXNativeTarget "FitBite" */;
+			buildConfigurationList = 1054E6942E3AC532006FBACF /* Build configuration list for PBXNativeTarget "CalrAI" */;
 			buildPhases = (
 				1054E6692E3AC530006FBACF /* Sources */,
 				1054E66A2E3AC530006FBACF /* Frameworks */,
@@ -121,18 +127,18 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				1054E66F2E3AC530006FBACF /* FitBite */,
+				1054E66F2E3AC530006FBACF /* CalrAI */,
 			);
-			name = FitBite;
+			name = CalrAI;
 			packageProductDependencies = (
 			);
 			productName = FitBite;
-			productReference = 1054E66D2E3AC530006FBACF /* FitBite.app */;
+			productReference = 1054E66D2E3AC530006FBACF /* CalrAI.app */;
 			productType = "com.apple.product-type.application";
 		};
-		1054E6802E3AC532006FBACF /* FitBiteTests */ = {
+		1054E6802E3AC532006FBACF /* CalrAITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1054E6992E3AC532006FBACF /* Build configuration list for PBXNativeTarget "FitBiteTests" */;
+			buildConfigurationList = 1054E6992E3AC532006FBACF /* Build configuration list for PBXNativeTarget "CalrAITests" */;
 			buildPhases = (
 				1054E67D2E3AC532006FBACF /* Sources */,
 				1054E67E2E3AC532006FBACF /* Frameworks */,
@@ -144,18 +150,18 @@
 				1054E6832E3AC532006FBACF /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				1054E6842E3AC532006FBACF /* FitBiteTests */,
+				1054E6842E3AC532006FBACF /* CalrAITests */,
 			);
-			name = FitBiteTests;
+			name = CalrAITests;
 			packageProductDependencies = (
 			);
 			productName = FitBiteTests;
-			productReference = 1054E6812E3AC532006FBACF /* FitBiteTests.xctest */;
+			productReference = 1054E6812E3AC532006FBACF /* CalrAITests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		1054E68A2E3AC532006FBACF /* FitBiteUITests */ = {
+		1054E68A2E3AC532006FBACF /* CalrAIUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1054E69C2E3AC532006FBACF /* Build configuration list for PBXNativeTarget "FitBiteUITests" */;
+			buildConfigurationList = 1054E69C2E3AC532006FBACF /* Build configuration list for PBXNativeTarget "CalrAIUITests" */;
 			buildPhases = (
 				1054E6872E3AC532006FBACF /* Sources */,
 				1054E6882E3AC532006FBACF /* Frameworks */,
@@ -167,13 +173,13 @@
 				1054E68D2E3AC532006FBACF /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				1054E68E2E3AC532006FBACF /* FitBiteUITests */,
+				1054E68E2E3AC532006FBACF /* CalrAIUITests */,
 			);
-			name = FitBiteUITests;
+			name = CalrAIUITests;
 			packageProductDependencies = (
 			);
 			productName = FitBiteUITests;
-			productReference = 1054E68B2E3AC532006FBACF /* FitBiteUITests.xctest */;
+			productReference = 1054E68B2E3AC532006FBACF /* CalrAIUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -199,7 +205,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 1054E6682E3AC530006FBACF /* Build configuration list for PBXProject "FitBite" */;
+			buildConfigurationList = 1054E6682E3AC530006FBACF /* Build configuration list for PBXProject "CalrAI" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -213,9 +219,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				1054E66C2E3AC530006FBACF /* FitBite */,
-				1054E6802E3AC532006FBACF /* FitBiteTests */,
-				1054E68A2E3AC532006FBACF /* FitBiteUITests */,
+				1054E66C2E3AC530006FBACF /* CalrAI */,
+				1054E6802E3AC532006FBACF /* CalrAITests */,
+				1054E68A2E3AC532006FBACF /* CalrAIUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -249,6 +255,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				10E2DFE22E44112200BC9CE9 /* CalrAI.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -271,12 +278,12 @@
 /* Begin PBXTargetDependency section */
 		1054E6832E3AC532006FBACF /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 1054E66C2E3AC530006FBACF /* FitBite */;
+			target = 1054E66C2E3AC530006FBACF /* CalrAI */;
 			targetProxy = 1054E6822E3AC532006FBACF /* PBXContainerItemProxy */;
 		};
 		1054E68D2E3AC532006FBACF /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 1054E66C2E3AC530006FBACF /* FitBite */;
+			target = 1054E66C2E3AC530006FBACF /* CalrAI */;
 			targetProxy = 1054E68C2E3AC532006FBACF /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -287,14 +294,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = FitBite/FitBite.entitlements;
+				CODE_SIGN_ENTITLEMENTS = CalrAI.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"FitBite/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"CalrAI/Preview Content\"";
 				DEVELOPMENT_TEAM = 6BQ4Q6RSTC;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = FitBite/Info.plist;
+				INFOPLIST_FILE = CalrAI/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "We use the camera to scan food barcodes.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -306,7 +313,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.ciaran.FitBite;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ciaran.CalrAI;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -319,14 +326,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = FitBite/FitBite.entitlements;
+				CODE_SIGN_ENTITLEMENTS = CalrAI.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"FitBite/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"CalrAI/Preview Content\"";
 				DEVELOPMENT_TEAM = 6BQ4Q6RSTC;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = FitBite/Info.plist;
+				INFOPLIST_FILE = CalrAI/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "We use the camera to scan food barcodes.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -338,7 +345,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.ciaran.FitBite;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ciaran.CalrAI;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -480,7 +487,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FitBite.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FitBite";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CalrAI.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CalrAI";
 			};
 			name = Debug;
 		};
@@ -499,7 +506,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FitBite.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FitBite";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CalrAI.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CalrAI";
 			};
 			name = Release;
 		};
@@ -540,7 +547,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1054E6682E3AC530006FBACF /* Build configuration list for PBXProject "FitBite" */ = {
+		1054E6682E3AC530006FBACF /* Build configuration list for PBXProject "CalrAI" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1054E6972E3AC532006FBACF /* Debug */,
@@ -549,7 +556,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		1054E6942E3AC532006FBACF /* Build configuration list for PBXNativeTarget "FitBite" */ = {
+		1054E6942E3AC532006FBACF /* Build configuration list for PBXNativeTarget "CalrAI" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1054E6952E3AC532006FBACF /* Debug */,
@@ -558,7 +565,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		1054E6992E3AC532006FBACF /* Build configuration list for PBXNativeTarget "FitBiteTests" */ = {
+		1054E6992E3AC532006FBACF /* Build configuration list for PBXNativeTarget "CalrAITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1054E69A2E3AC532006FBACF /* Debug */,
@@ -567,7 +574,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		1054E69C2E3AC532006FBACF /* Build configuration list for PBXNativeTarget "FitBiteUITests" */ = {
+		1054E69C2E3AC532006FBACF /* Build configuration list for PBXNativeTarget "CalrAIUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1054E69D2E3AC532006FBACF /* Debug */,
