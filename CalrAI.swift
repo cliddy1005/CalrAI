@@ -1,6 +1,6 @@
-//
+i//
 //  CalrAI.swift
-//  CalrAI  v1.2.1 (Improved search + auto barcode capture + init fixes)
+//  CalrAI  v1.3  (Smart search: OFF v2 + tags + fuzzy ranking + nocache)
 //  iOS 17+, Xcode 15
 //
 
@@ -11,7 +11,7 @@ import VisionKit
 // MARK: – Constants®
 //────────────────────────────────────────────
 fileprivate let kOFF = "https://world.openfoodfacts.org"
-fileprivate let kUA  = "CalrAI-Demo/1.2.1"
+fileprivate let kUA  = "CalrAI-Demo/1.3"
 
 //────────────────────────────────────────────
 // MARK: – User profile & macro-calculator
@@ -93,8 +93,8 @@ final class CalrAIVM: ObservableObject {
     }
     func delete(at offsets: IndexSet, in meal: Meal) {
         let slice = entriesFor(meal)
-        let global = offsets.map { idx in entries.firstIndex(of: slice[idx])! }
-        entries.remove(atOffsets: IndexSet(global))
+        let global = offsets.compactMap { idx in entries.firstIndex(of: slice[idx]) }.sorted(by: >)
+        for i in global { entries.remove(at: i) }
     }
     func update(id: UUID, grams: Double) {
         if let i = entries.firstIndex(where: { $0.id == id }) { entries[i].grams = grams }
@@ -159,7 +159,7 @@ struct Product: Decodable, Hashable {
         let r = try d.container(keyedBy: R.self)
         let p = try r.nestedContainer(keyedBy: P.self, forKey: .product)
         
-        // decode locals first
+        // locals first
         let code = try p.decode(String.self, forKey: .code)
         let en  = try? p.decode(String.self, forKey: .product_name_en)
         let any = try? p.decode(String.self, forKey: .product_name)
@@ -167,10 +167,7 @@ struct Product: Decodable, Hashable {
             .split(separator: ",").first?
             .trimmingCharacters(in: .whitespaces)
         
-        // assign stored properties in safe order
         barcode = code
-        
-        // build name from locals, not self.*
         let computedName = [en, any, brands.map { "\($0) \(code)" }, "Unnamed"]
             .compactMap { $0 }
             .first!
@@ -203,47 +200,53 @@ struct ProductLite: Decodable, Identifiable {
     let barcode, name: String
     let kcalPer100g: Double?
     let nutriScore: String?
+    let brands: String?
+    let uniqueScans: Int?
     
-    private enum K: String, CodingKey { case code, product_name_en, product_name, brands, nutriscore_grade, nutriments }
+    private enum K: String, CodingKey {
+        case code, product_name_en, product_name, brands, nutriscore_grade, nutriments, unique_scans_n
+    }
     private enum N: String, CodingKey { case energy_kcal_100g = "energy-kcal_100g" }
     init(from d: Decoder) throws {
         let c = try d.container(keyedBy: K.self)
-        
-        // locals first
         let code = try c.decode(String.self, forKey: .code)
         let en  = try? c.decode(String.self, forKey: .product_name_en)
         let any = try? c.decode(String.self, forKey: .product_name)
-        let brands = (try? c.decode(String.self, forKey: .brands))?
-            .split(separator: ",").first?
-            .trimmingCharacters(in: .whitespaces)
+        let brandsVal = try? c.decode(String.self, forKey: .brands)
         
         barcode = code
-        
-        let computedName = [en, any, brands, code]
+        let computedName = [en, any, brandsVal, code]
             .compactMap { $0 }
             .first!
             .trimmingCharacters(in: .whitespaces)
         name = computedName
         
         nutriScore = try? c.decode(String.self, forKey: .nutriscore_grade)
+        brands = brandsVal
+        uniqueScans = try? c.decode(Int.self, forKey: .unique_scans_n)
+        
         if let n = try? c.nestedContainer(keyedBy: N.self, forKey: .nutriments) {
             kcalPer100g = try n.decodeIfPresent(Double.self, forKey: .energy_kcal_100g)
         } else { kcalPer100g = nil }
     }
     
-    // Allow manual construction (not just decoding)
-    init(barcode: String, name: String, kcalPer100g: Double?, nutriScore: String?) {
+    // Allow manual construction (barcode path)
+    init(barcode: String, name: String, kcalPer100g: Double?, nutriScore: String?, brands: String?, uniqueScans: Int?) {
         self.barcode = barcode
         self.name = name
         self.kcalPer100g = kcalPer100g
         self.nutriScore = nutriScore
+        self.brands = brands
+        self.uniqueScans = uniqueScans
     }
     init(from product: Product) {
         self.init(
             barcode: product.barcode,
             name: product.name,
             kcalPer100g: product.kcalPer100g,
-            nutriScore: product.nutriScore
+            nutriScore: product.nutriScore,
+            brands: nil,
+            uniqueScans: nil
         )
     }
 }
@@ -370,7 +373,7 @@ struct RootView: View {
                                 .contentShape(Rectangle())
                                 .onTapGesture { editing = e }
                             }
-                            .onDelete { vm.delete(at: $0, in: meal) }
+                            .onDelete { offsets in withAnimation { vm.delete(at: offsets, in: meal) } }
                             
                             actionRow(icon: "barcode.viewfinder", text: "Scan Barcode", meal: meal) {
                                 vm.showScanner = true
@@ -402,40 +405,143 @@ struct RootView: View {
 }
 
 //────────────────────────────────────────────
-// MARK: – Networking  (improved search)
+// MARK: – Networking  (Smart search)
 //────────────────────────────────────────────
 enum API {
+    // MARK: Product by barcode
     static func product(code: String) async throws -> Product {
         try await fetch(URL(string: "\(kOFF)/api/v2/product/\(code).json")!)
     }
-    static func search(_ qRaw: String) async throws -> [ProductLite] {
-        // Normalize query
-        var q = qRaw.trimmingCharacters(in: .whitespacesAndNewlines)
-        q = q.replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
-        guard q.count >= 2 else { return [] }
-        
-        // Use v2 search with simple mode + popularity sort
-        var c = URLComponents(string: "\(kOFF)/api/v2/search")!
+    
+    // MARK: Low-level search calls (OFF v2)
+    private static func baseFields() -> String {
+        // Keep ProductLite fields in sync
+        return "code,product_name_en,product_name,brands,nutriscore_grade,unique_scans_n,nutriments.energy-kcal_100g"
+    }
+    private static func langList() -> String {
         let uiLang = Locale.current.language.languageCode?.identifier ?? "en"
+        return "\(uiLang),en"
+    }
+    private static func searchSimple(_ q: String, pageSize: Int = 50) async throws -> [ProductLite] {
+        var c = URLComponents(string: "\(kOFF)/api/v2/search")!
         c.queryItems = [
-            .init(name: "search_terms",    value: q),
-            .init(name: "search_simple",   value: "1"),
-            .init(name: "page_size",       value: "25"),
-            .init(name: "sort_by",         value: "popularity_key"),
-            .init(name: "languages_tags",  value: "\(uiLang),en"),
-            .init(name: "fields",
-                  value: "code,product_name_en,product_name,brands,nutriscore_grade,nutriments.energy-kcal_100g")
+            .init(name: "search_terms",   value: q),
+            .init(name: "search_simple",  value: "1"),
+            .init(name: "languages_tags", value: langList()),
+            .init(name: "page_size",      value: "\(pageSize)"),
+            .init(name: "sort_by",        value: "popularity_key"),
+            .init(name: "fields",         value: baseFields()),
+            .init(name: "nocache",        value: "1")
         ]
         struct Resp: Decodable { let products: [ProductLite] }
         let resp: Resp = try await fetch(c.url!)
-        return resp.products.filter { !$0.name.trimmingCharacters(in: .whitespaces).isEmpty }
+        return resp.products
     }
+    private static func searchByCategoryTag(_ q: String, pageSize: Int = 50) async throws -> [ProductLite] {
+        var c = URLComponents(string: "\(kOFF)/api/v2/search")!
+        c.queryItems = [
+            .init(name: "categories_tags_en", value: q),
+            .init(name: "languages_tags",     value: langList()),
+            .init(name: "page_size",          value: "\(pageSize)"),
+            .init(name: "sort_by",            value: "popularity_key"),
+            .init(name: "fields",             value: baseFields()),
+            .init(name: "nocache",            value: "1")
+        ]
+        struct Resp: Decodable { let products: [ProductLite] }
+        let resp: Resp = try await fetch(c.url!)
+        return resp.products
+    }
+    private static func searchByBrandTag(_ q: String, pageSize: Int = 50) async throws -> [ProductLite] {
+        var c = URLComponents(string: "\(kOFF)/api/v2/search")!
+        c.queryItems = [
+            .init(name: "brands_tags",    value: q),
+            .init(name: "languages_tags", value: langList()),
+            .init(name: "page_size",      value: "\(pageSize)"),
+            .init(name: "sort_by",        value: "popularity_key"),
+            .init(name: "fields",         value: baseFields()),
+            .init(name: "nocache",        value: "1")
+        ]
+        struct Resp: Decodable { let products: [ProductLite] }
+        let resp: Resp = try await fetch(c.url!)
+        return resp.products
+    }
+    
+    // MARK: High-level smart search
+    static func searchSmart(_ qRaw: String) async throws -> [ProductLite] {
+        var q = qRaw.trimmingCharacters(in: .whitespacesAndNewlines)
+        q = q.replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+        guard !q.isEmpty else { return [] }
+        
+        // Barcode direct path
+        if q.range(of: #"^\d{8,14}$"#, options: .regularExpression) != nil {
+            if let p: Product = try? await product(code: q) {
+                return [ProductLite(from: p)]
+            }
+        }
+        
+        // Parallel queries (simple + category + brand)
+        async let a = searchSimple(q)
+        async let b = searchByCategoryTag(q)
+        async let c = searchByBrandTag(q)
+        let combined = (try? await a) ?? [] + (try? await b) ?? [] + (try? await c) ?? []
+        
+        // Deduplicate by barcode
+        var seen = Set<String>()
+        let uniq = combined.filter { seen.insert($0.barcode).inserted }
+        
+        // Rank with fuzzy scoring
+        return SearchRanker.rank(results: uniq, query: q)
+    }
+    
+    // MARK: Fetch helper
     private static func fetch<T: Decodable>(_ url: URL) async throws -> T {
         var req = URLRequest(url: url)
         req.setValue(kUA, forHTTPHeaderField: "User-Agent")
         let (d, resp) = try await URLSession.shared.data(for: req)
         guard (resp as? HTTPURLResponse)?.statusCode == 200 else { throw URLError(.badServerResponse) }
         return try JSONDecoder().decode(T.self, from: d)
+    }
+}
+
+//────────────────────────────────────────────
+// MARK: – Search ranking utils
+//────────────────────────────────────────────
+enum SearchRanker {
+    static func norm(_ s: String) -> String {
+        s.folding(options: .diacriticInsensitive, locale: .current).lowercased()
+    }
+    static func tokens(_ s: String) -> [String] {
+        norm(s).split(whereSeparator: { !$0.isLetter && !$0.isNumber }).map(String.init).filter { !$0.isEmpty }
+    }
+    static func coverageScore(queryTokens: [String], in text: String?) -> Double {
+        guard let t = text, !t.isEmpty else { return 0 }
+        let T = norm(t)
+        let hits = queryTokens.filter { T.contains($0) }.count
+        return queryTokens.isEmpty ? 0 : Double(hits) / Double(queryTokens.count)
+    }
+    static func popularityScore(_ n: Int?) -> Double {
+        guard let n else { return 0 }
+        // log scale to avoid dominance
+        return log(Double(n) + 1) / log(10.0)
+    }
+    static func rank(results: [ProductLite], query: String) -> [ProductLite] {
+        let qTokens = tokens(query)
+        return results.sorted { a, b in
+            let aName = coverageScore(queryTokens: qTokens, in: a.name)
+            let bName = coverageScore(queryTokens: qTokens, in: b.name)
+            if aName != bName { return aName > bName }
+            
+            let aBrand = coverageScore(queryTokens: qTokens, in: a.brands)
+            let bBrand = coverageScore(queryTokens: qTokens, in: b.brands)
+            if aBrand != bBrand { return aBrand > bBrand }
+            
+            let aPop = popularityScore(a.uniqueScans)
+            let bPop = popularityScore(b.uniqueScans)
+            if aPop != bPop { return aPop > bPop }
+            
+            // final fallback: alphabetical
+            return a.name.localizedCaseInsensitiveCompare(b.name) == .orderedAscending
+        }
     }
 }
 
@@ -466,8 +572,12 @@ struct SearchSheet: View {
                                     .clipShape(Circle())
                             }
                         }
-                        if let kcal = p.kcalPer100g {
-                            Text("\(Int(kcal)) kcal / 100 g")
+                        var meta: [String] = []
+                        if let kcal = p.kcalPer100g { meta.append("\(Int(kcal)) kcal/100g") }
+                        if let brand = p.brands, !brand.isEmpty { meta.append(brand) }
+                        if let scans = p.uniqueScans { meta.append("pop: \(scans)") }
+                        if !meta.isEmpty {
+                            Text(meta.joined(separator: " • "))
                                 .font(.caption).foregroundColor(.secondary)
                         }
                     }
@@ -493,20 +603,15 @@ struct SearchSheet: View {
         if query.isEmpty { hits = []; return }
         do { try await Task.sleep(nanoseconds: 250_000_000) } catch { return } // cancelled
         
-        // Barcode direct lookup if it looks like an EAN/UPC
-        if query.range(of: #"^\d{8,14}$"#, options: .regularExpression) != nil {
-            loading = true
-            defer { loading = false }
-            if let p = try? await API.product(code: query) {
-                hits = [ProductLite(from: p)]
-                return
-            }
-        }
-        guard query.count >= 2 else { hits = []; return }
         loading = true
         defer { loading = false }
         guard !Task.isCancelled else { return }
-        hits = (try? await API.search(query)) ?? []
+        
+        if let p = try? await API.searchSmart(query) {
+            hits = p
+        } else {
+            hits = []
+        }
     }
     
     private func choose(_ lite: ProductLite) async {
@@ -617,7 +722,7 @@ struct ScannerSheet: UIViewControllerRepresentable {
         let vc = DataScannerViewController(
             recognizedDataTypes: [.barcode()],
             qualityLevel: .balanced,
-            recognizesMultipleItems: false, // only want first hit
+            recognizesMultipleItems: false, // first hit
             isGuidanceEnabled: true,
             isHighlightingEnabled: true
         )
@@ -632,7 +737,6 @@ struct ScannerSheet: UIViewControllerRepresentable {
         private var didCapture = false
         init(_ p: ScannerSheet) { parent = p }
         
-        // Auto-capture when a new item appears
         func dataScanner(_ s: DataScannerViewController, didAdd addedItems: [RecognizedItem], allItems: [RecognizedItem]) {
             guard !didCapture else { return }
             if let code = addedItems.compactMap({ item -> String? in
@@ -644,8 +748,6 @@ struct ScannerSheet: UIViewControllerRepresentable {
                 s.dismiss(animated: true)
             }
         }
-        
-        // Fallback: tap still works if needed
         func dataScanner(_ s: DataScannerViewController, didTapOn item: RecognizedItem) {
             guard !didCapture else { return }
             if case .barcode(let b) = item, let code = b.payloadStringValue {
