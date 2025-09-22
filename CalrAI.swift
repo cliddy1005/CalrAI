@@ -1,6 +1,6 @@
-i//
+//
 //  CalrAI.swift
-//  CalrAI  v1.3  (Smart search: OFF v2 + tags + fuzzy ranking + nocache)
+//  CalrAI v1.3.1  (Smart search + ProductRow refactor + auto barcode capture)
 //  iOS 17+, Xcode 15
 //
 
@@ -11,7 +11,7 @@ import VisionKit
 // MARK: – Constants®
 //────────────────────────────────────────────
 fileprivate let kOFF = "https://world.openfoodfacts.org"
-fileprivate let kUA  = "CalrAI-Demo/1.3"
+fileprivate let kUA  = "CalrAI-Demo/1.3.1"
 
 //────────────────────────────────────────────
 // MARK: – User profile & macro-calculator
@@ -40,8 +40,7 @@ struct UserProfile: Codable {
     
     func macroTargets() -> (kcal: Double, p: Double, f: Double, c: Double) {
         let w = Double(weightKg), h = Double(heightCm), a = Double(age)
-        let bmr = sex == .male ? (10*w + 6.25*h - 5*a + 5)
-                               : (10*w + 6.25*h - 5*a - 161)
+        let bmr = sex == .male ? (10*w + 6.25*h - 5*a + 5) : (10*w + 6.25*h - 5*a - 161)
         var kcal = bmr * activity.factor
         if goal == .lose { kcal *= 0.85 }
         if goal == .gain { kcal *= 1.15 }
@@ -64,30 +63,26 @@ struct CalrAIApp: App {
 
 @MainActor
 final class CalrAIVM: ObservableObject {
-    // Profile persistence
     @AppStorage("userProfile") private var stored = ""
     var profile: UserProfile {
         get { (try? JSONDecoder().decode(UserProfile.self, from: Data(stored.utf8))) ?? UserProfile() }
         set { stored = String(data: try! JSONEncoder().encode(newValue), encoding: .utf8)! }
     }
     
-    // Meal buckets
     enum Meal: String, CaseIterable, Identifiable, Codable {
         case breakfast, lunch, dinner, snacks
         var id: Self { self }
         var title: String { rawValue.capitalized }
     }
     
-    // Log & UI
     @Published var entries: [FoodEntry] = []
     @Published var activeMeal: Meal?
     @Published var showScanner  = false
     @Published var showSearch   = false
     @Published var showSettings = false
     @Published var errorMessage: String?
-    @Published var exerciseKcal = 0   // placeholder
+    @Published var exerciseKcal = 0
     
-    // CRUD
     func append(_ p: Product, to meal: Meal) {
         entries.append(.init(product: p, grams: p.servingSizeGrams ?? 100, meal: meal))
     }
@@ -111,9 +106,7 @@ final class CalrAIVM: ObservableObject {
     // Totals & macro rings
     var totalKcal: Int { entries.reduce(0) { $0 + Int($1.calories) } }
     var totals: (p: Double, c: Double, f: Double) {
-        entries.reduce(into: (0,0,0)) { acc, e in
-            acc.0 += e.protein; acc.1 += e.carbs; acc.2 += e.fat
-        }
+        entries.reduce(into: (0,0,0)) { acc, e in acc.0 += e.protein; acc.1 += e.carbs; acc.2 += e.fat }
     }
     var goalKcal: Int { Int(profile.macroTargets().kcal) }
     var remainingKcal: Int { goalKcal - totalKcal + exerciseKcal }
@@ -159,20 +152,18 @@ struct Product: Decodable, Hashable {
         let r = try d.container(keyedBy: R.self)
         let p = try r.nestedContainer(keyedBy: P.self, forKey: .product)
         
-        // locals first
         let code = try p.decode(String.self, forKey: .code)
         let en  = try? p.decode(String.self, forKey: .product_name_en)
         let any = try? p.decode(String.self, forKey: .product_name)
-        let brands = (try? p.decode(String.self, forKey: .brands))?
-            .split(separator: ",").first?
-            .trimmingCharacters(in: .whitespaces)
+        let brands = try? p.decode(String.self, forKey: .brands)
         
         barcode = code
-        let computedName = [en, any, brands.map { "\($0) \(code)" }, "Unnamed"]
-            .compactMap { $0 }
-            .first!
-            .trimmingCharacters(in: .whitespaces)
-        name = computedName
+        var computedName: String
+        if let en, !en.isEmpty { computedName = en }
+        else if let any, !any.isEmpty { computedName = any }
+        else if let brands, !brands.isEmpty { computedName = brands }
+        else { computedName = "Unnamed" }
+        name = computedName.trimmingCharacters(in: .whitespaces)
         
         nutriScore = try? p.decode(String.self, forKey: .nutriscore_grade)
         
@@ -215,11 +206,12 @@ struct ProductLite: Decodable, Identifiable {
         let brandsVal = try? c.decode(String.self, forKey: .brands)
         
         barcode = code
-        let computedName = [en, any, brandsVal, code]
-            .compactMap { $0 }
-            .first!
-            .trimmingCharacters(in: .whitespaces)
-        name = computedName
+        var computedName: String
+        if let en, !en.isEmpty { computedName = en }
+        else if let any, !any.isEmpty { computedName = any }
+        else if let brandsVal, !brandsVal.isEmpty { computedName = brandsVal }
+        else { computedName = code }
+        name = computedName.trimmingCharacters(in: .whitespaces)
         
         nutriScore = try? c.decode(String.self, forKey: .nutriscore_grade)
         brands = brandsVal
@@ -230,7 +222,7 @@ struct ProductLite: Decodable, Identifiable {
         } else { kcalPer100g = nil }
     }
     
-    // Allow manual construction (barcode path)
+    // Manual init for barcode path if needed
     init(barcode: String, name: String, kcalPer100g: Double?, nutriScore: String?, brands: String?, uniqueScans: Int?) {
         self.barcode = barcode
         self.name = name
@@ -240,19 +232,12 @@ struct ProductLite: Decodable, Identifiable {
         self.uniqueScans = uniqueScans
     }
     init(from product: Product) {
-        self.init(
-            barcode: product.barcode,
-            name: product.name,
-            kcalPer100g: product.kcalPer100g,
-            nutriScore: product.nutriScore,
-            brands: nil,
-            uniqueScans: nil
-        )
+        self.init(barcode: product.barcode, name: product.name, kcalPer100g: product.kcalPer100g, nutriScore: product.nutriScore, brands: nil, uniqueScans: nil)
     }
 }
 
 //────────────────────────────────────────────
-// MARK: – Calorie banner
+// MARK: – Calorie header & macro dashboard
 //────────────────────────────────────────────
 struct CalorieHeader: View {
     @EnvironmentObject var vm: CalrAIVM
@@ -264,12 +249,9 @@ struct CalorieHeader: View {
     }
     var body: some View {
         HStack(spacing: 8) {
-            metric("Goal", vm.goalKcal)
-            Text("–")
-            metric("Food", vm.totalKcal)
-            Text("+")
-            metric("Exercise", vm.exerciseKcal)
-            Text("=")
+            metric("Goal", vm.goalKcal); Text("–")
+            metric("Food", vm.totalKcal); Text("+")
+            metric("Exercise", vm.exerciseKcal); Text("=")
             metric("Remaining", vm.remainingKcal, vm.remainingKcal >= 0 ? .green : .red)
         }
         .padding(.vertical, 6)
@@ -278,9 +260,6 @@ struct CalorieHeader: View {
     }
 }
 
-//────────────────────────────────────────────
-// MARK: – Macro rings
-//────────────────────────────────────────────
 struct MacroGoal: Identifiable {
     enum Kind { case carbs, fat, protein }
     var id: Kind { kind }
@@ -292,11 +271,7 @@ struct MacroGoal: Identifiable {
 struct MacroRing: View {
     let g: MacroGoal
     private var col: Color {
-        switch g.kind {
-        case .carbs:   return .teal
-        case .fat:     return .purple
-        case .protein: return .orange
-        }
+        switch g.kind { case .carbs: .teal; case .fat: .purple; case .protein: .orange }
     }
     private var title: String {
         switch g.kind { case .carbs: "Carbs"; case .fat: "Fat"; case .protein: "Protein" }
@@ -339,8 +314,7 @@ struct RootView: View {
     @EnvironmentObject private var vm: CalrAIVM
     @State private var editing: FoodEntry?
     
-    private func actionRow(icon: String, text: String, meal: CalrAIVM.Meal,
-                           trigger: @escaping () -> Void) -> some View {
+    private func actionRow(icon: String, text: String, meal: CalrAIVM.Meal, trigger: @escaping () -> Void) -> some View {
         Button {
             vm.activeMeal = meal
             trigger()
@@ -362,8 +336,10 @@ struct RootView: View {
                                     HStack {
                                         Text(e.product.name)
                                         if let g = e.product.nutriScore {
-                                            Text(g.uppercased()).font(.caption2)
-                                                .padding(4).background(Color.gray.opacity(0.2))
+                                            Text(g.uppercased())
+                                                .font(.caption2)
+                                                .padding(4)
+                                                .background(Color.gray.opacity(0.2))
                                                 .clipShape(Circle())
                                         }
                                     }
@@ -375,12 +351,8 @@ struct RootView: View {
                             }
                             .onDelete { offsets in withAnimation { vm.delete(at: offsets, in: meal) } }
                             
-                            actionRow(icon: "barcode.viewfinder", text: "Scan Barcode", meal: meal) {
-                                vm.showScanner = true
-                            }
-                            actionRow(icon: "magnifyingglass", text: "Search Food", meal: meal) {
-                                vm.showSearch = true
-                            }
+                            actionRow(icon: "barcode.viewfinder", text: "Scan Barcode", meal: meal) { vm.showScanner = true }
+                            actionRow(icon: "magnifyingglass", text: "Search Food", meal: meal) { vm.showSearch = true }
                         }
                     }
                 }
@@ -395,9 +367,7 @@ struct RootView: View {
             .sheet(isPresented: $vm.showSearch)   { SearchSheet  { p in if let m = vm.activeMeal { vm.append(p, to: m) } } }
             .sheet(isPresented: $vm.showSettings) { SettingsSheet() }
             .sheet(item: $editing) { e in EditSheet(entry: e) { g in vm.update(id: e.id, grams: g) } }
-            .alert("Error",
-                   isPresented: Binding(get: { vm.errorMessage != nil },
-                                        set: { _ in vm.errorMessage = nil })) {
+            .alert("Error", isPresented: Binding(get: { vm.errorMessage != nil }, set: { _ in vm.errorMessage = nil })) {
                 Button("OK", role: .cancel) { }
             } message: { Text(vm.errorMessage ?? "") }
         }
@@ -408,19 +378,18 @@ struct RootView: View {
 // MARK: – Networking  (Smart search)
 //────────────────────────────────────────────
 enum API {
-    // MARK: Product by barcode
+    // Single product by barcode
     static func product(code: String) async throws -> Product {
         try await fetch(URL(string: "\(kOFF)/api/v2/product/\(code).json")!)
     }
     
-    // MARK: Low-level search calls (OFF v2)
+    // Low-level helpers
     private static func baseFields() -> String {
-        // Keep ProductLite fields in sync
-        return "code,product_name_en,product_name,brands,nutriscore_grade,unique_scans_n,nutriments.energy-kcal_100g"
+        "code,product_name_en,product_name,brands,nutriscore_grade,unique_scans_n,nutriments.energy-kcal_100g"
     }
     private static func langList() -> String {
-        let uiLang = Locale.current.language.languageCode?.identifier ?? "en"
-        return "\(uiLang),en"
+        let ui = Locale.current.language.languageCode?.identifier ?? "en"
+        return "\(ui),en"
     }
     private static func searchSimple(_ q: String, pageSize: Int = 50) async throws -> [ProductLite] {
         var c = URLComponents(string: "\(kOFF)/api/v2/search")!
@@ -466,7 +435,7 @@ enum API {
         return resp.products
     }
     
-    // MARK: High-level smart search
+    // High-level smart search
     static func searchSmart(_ qRaw: String) async throws -> [ProductLite] {
         var q = qRaw.trimmingCharacters(in: .whitespacesAndNewlines)
         q = q.replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
@@ -479,21 +448,26 @@ enum API {
             }
         }
         
-        // Parallel queries (simple + category + brand)
+        // Run multiple queries in parallel
         async let a = searchSimple(q)
         async let b = searchByCategoryTag(q)
         async let c = searchByBrandTag(q)
-        let combined = (try? await a) ?? [] + (try? await b) ?? [] + (try? await c) ?? []
+        
+        // Break up for the compiler
+        let ra = (try? await a) ?? []
+        let rb = (try? await b) ?? []
+        let rc = (try? await c) ?? []
+        let combined = ra + rb + rc
         
         // Deduplicate by barcode
         var seen = Set<String>()
         let uniq = combined.filter { seen.insert($0.barcode).inserted }
         
-        // Rank with fuzzy scoring
+        // Rank (simple heuristic)
         return SearchRanker.rank(results: uniq, query: q)
     }
     
-    // MARK: Fetch helper
+    // Fetch helper
     private static func fetch<T: Decodable>(_ url: URL) async throws -> T {
         var req = URLRequest(url: url)
         req.setValue(kUA, forHTTPHeaderField: "User-Agent")
@@ -521,7 +495,6 @@ enum SearchRanker {
     }
     static func popularityScore(_ n: Int?) -> Double {
         guard let n else { return 0 }
-        // log scale to avoid dominance
         return log(Double(n) + 1) / log(10.0)
     }
     static func rank(results: [ProductLite], query: String) -> [ProductLite] {
@@ -529,25 +502,54 @@ enum SearchRanker {
         return results.sorted { a, b in
             let aName = coverageScore(queryTokens: qTokens, in: a.name)
             let bName = coverageScore(queryTokens: qTokens, in: b.name)
-            if aName != bName { return aName > bName }
-            
             let aBrand = coverageScore(queryTokens: qTokens, in: a.brands)
             let bBrand = coverageScore(queryTokens: qTokens, in: b.brands)
-            if aBrand != bBrand { return aBrand > bBrand }
-            
             let aPop = popularityScore(a.uniqueScans)
             let bPop = popularityScore(b.uniqueScans)
-            if aPop != bPop { return aPop > bPop }
             
-            // final fallback: alphabetical
+            if aName != bName { return aName > bName }
+            if aBrand != bBrand { return aBrand > bBrand }
+            if aPop != bPop { return aPop > bPop }
             return a.name.localizedCaseInsensitiveCompare(b.name) == .orderedAscending
         }
     }
 }
 
 //────────────────────────────────────────────
-// MARK: – Search sheet
+// MARK: – Search row + Search sheet (refactored)
 //────────────────────────────────────────────
+struct ProductRow: View {
+    let product: ProductLite
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(product.name)
+                if let g = product.nutriScore {
+                    Text(g.uppercased())
+                        .font(.caption2)
+                        .padding(4)
+                        .background(Color.gray.opacity(0.2))
+                        .clipShape(Circle())
+                }
+            }
+            HStack(spacing: 8) {
+                if let kcal = product.kcalPer100g {
+                    Text("\(Int(kcal)) kcal / 100 g")
+                }
+                if let brands = product.brands, !brands.isEmpty {
+                    Text(brands)
+                }
+                if let scans = product.uniqueScans {
+                    Text("pop: \(scans)")
+                }
+            }
+            .font(.caption)
+            .foregroundColor(.secondary)
+        }
+    }
+}
+
 struct SearchSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var q = ""
@@ -559,30 +561,13 @@ struct SearchSheet: View {
     var body: some View {
         NavigationStack {
             List {
-                if loading { ProgressView().frame(maxWidth: .infinity, alignment: .center) }
+                if loading {
+                    ProgressView().frame(maxWidth: .infinity, alignment: .center)
+                }
                 ForEach(hits) { p in
-                    VStack(alignment: .leading) {
-                        HStack {
-                            Text(p.name)
-                            if let g = p.nutriScore {
-                                Text(g.uppercased())
-                                    .font(.caption2)
-                                    .padding(4)
-                                    .background(Color.gray.opacity(0.2))
-                                    .clipShape(Circle())
-                            }
-                        }
-                        var meta: [String] = []
-                        if let kcal = p.kcalPer100g { meta.append("\(Int(kcal)) kcal/100g") }
-                        if let brand = p.brands, !brand.isEmpty { meta.append(brand) }
-                        if let scans = p.uniqueScans { meta.append("pop: \(scans)") }
-                        if !meta.isEmpty {
-                            Text(meta.joined(separator: " • "))
-                                .font(.caption).foregroundColor(.secondary)
-                        }
-                    }
-                    .contentShape(Rectangle())
-                    .onTapGesture { Task { await choose(p) } }
+                    ProductRow(product: p)
+                        .contentShape(Rectangle())
+                        .onTapGesture { Task { await choose(p) } }
                 }
                 if !loading && hits.isEmpty && q.trimmingCharacters(in: .whitespaces).count >= 2 {
                     Text("No matches").foregroundStyle(.secondary)
@@ -594,28 +579,35 @@ struct SearchSheet: View {
                 searchTask?.cancel()
                 searchTask = Task { await performSearch(for: newValue) }
             }
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close", role: .cancel) { dismiss() } } }
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Close", role: .cancel) { dismiss() }
+                }
+            }
         }
     }
     
     private func performSearch(for text: String) async {
         let query = text.trimmingCharacters(in: .whitespacesAndNewlines)
         if query.isEmpty { hits = []; return }
-        do { try await Task.sleep(nanoseconds: 250_000_000) } catch { return } // cancelled
+        do { try await Task.sleep(nanoseconds: 250_000_000) } catch { return } // debounce, allow cancel
+        guard !Task.isCancelled else { return }
         
         loading = true
         defer { loading = false }
-        guard !Task.isCancelled else { return }
         
-        if let p = try? await API.searchSmart(query) {
-            hits = p
+        if let results = try? await API.searchSmart(query) {
+            hits = results
         } else {
             hits = []
         }
     }
     
     private func choose(_ lite: ProductLite) async {
-        if let p = try? await API.product(code: lite.barcode) { pick(p); dismiss() }
+        if let p = try? await API.product(code: lite.barcode) {
+            pick(p)
+            dismiss()
+        }
     }
 }
 
@@ -722,7 +714,7 @@ struct ScannerSheet: UIViewControllerRepresentable {
         let vc = DataScannerViewController(
             recognizedDataTypes: [.barcode()],
             qualityLevel: .balanced,
-            recognizesMultipleItems: false, // first hit
+            recognizesMultipleItems: false, // first hit only; change to true to add many
             isGuidanceEnabled: true,
             isHighlightingEnabled: true
         )
@@ -737,6 +729,7 @@ struct ScannerSheet: UIViewControllerRepresentable {
         private var didCapture = false
         init(_ p: ScannerSheet) { parent = p }
         
+        // Auto-capture when a new barcode appears
         func dataScanner(_ s: DataScannerViewController, didAdd addedItems: [RecognizedItem], allItems: [RecognizedItem]) {
             guard !didCapture else { return }
             if let code = addedItems.compactMap({ item -> String? in
@@ -748,6 +741,8 @@ struct ScannerSheet: UIViewControllerRepresentable {
                 s.dismiss(animated: true)
             }
         }
+        
+        // Fallback: tap-to-capture still works
         func dataScanner(_ s: DataScannerViewController, didTapOn item: RecognizedItem) {
             guard !didCapture else { return }
             if case .barcode(let b) = item, let code = b.payloadStringValue {
