@@ -1,6 +1,6 @@
 //
 //  CalrAI.swift
-//  CalrAI  v1.0  (English-only search, meals, scanner)
+//  CalrAI  v1.2.1 (Improved search + auto barcode capture + init fixes)
 //  iOS 17+, Xcode 15
 //
 
@@ -10,8 +10,8 @@ import VisionKit
 //────────────────────────────────────────────
 // MARK: – Constants®
 //────────────────────────────────────────────
-fileprivate let kOFF = "https://world.openfoodfacts.net"
-fileprivate let kUA  = "CalrAI-Demo/1.0"
+fileprivate let kOFF = "https://world.openfoodfacts.org"
+fileprivate let kUA  = "CalrAI-Demo/1.2.1"
 
 //────────────────────────────────────────────
 // MARK: – User profile & macro-calculator
@@ -152,15 +152,31 @@ struct Product: Decodable, Hashable {
     
     private enum R: String, CodingKey { case product }
     private enum P: String, CodingKey { case code, product_name_en, product_name,
-                                        serving_size, nutriscore_grade, nutriments }
+                                        serving_size, nutriscore_grade, nutriments, brands }
     private enum N: String, CodingKey { case energy_kcal_100g = "energy-kcal_100g",
                                         proteins_100g, fat_100g, carbohydrates_100g }
     init(from d: Decoder) throws {
         let r = try d.container(keyedBy: R.self)
         let p = try r.nestedContainer(keyedBy: P.self, forKey: .product)
-        barcode = try p.decode(String.self, forKey: .code)
-        name = (try? p.decode(String.self, forKey: .product_name_en))
-            ?? (try? p.decode(String.self, forKey: .product_name)) ?? "Unnamed"
+        
+        // decode locals first
+        let code = try p.decode(String.self, forKey: .code)
+        let en  = try? p.decode(String.self, forKey: .product_name_en)
+        let any = try? p.decode(String.self, forKey: .product_name)
+        let brands = (try? p.decode(String.self, forKey: .brands))?
+            .split(separator: ",").first?
+            .trimmingCharacters(in: .whitespaces)
+        
+        // assign stored properties in safe order
+        barcode = code
+        
+        // build name from locals, not self.*
+        let computedName = [en, any, brands.map { "\($0) \(code)" }, "Unnamed"]
+            .compactMap { $0 }
+            .first!
+            .trimmingCharacters(in: .whitespaces)
+        name = computedName
+        
         nutriScore = try? p.decode(String.self, forKey: .nutriscore_grade)
         
         let n = try p.nestedContainer(keyedBy: N.self, forKey: .nutriments)
@@ -188,16 +204,47 @@ struct ProductLite: Decodable, Identifiable {
     let kcalPer100g: Double?
     let nutriScore: String?
     
-    private enum K: String, CodingKey { case code, product_name_en, nutriscore_grade, nutriments }
+    private enum K: String, CodingKey { case code, product_name_en, product_name, brands, nutriscore_grade, nutriments }
     private enum N: String, CodingKey { case energy_kcal_100g = "energy-kcal_100g" }
     init(from d: Decoder) throws {
         let c = try d.container(keyedBy: K.self)
-        barcode = try c.decode(String.self, forKey: .code)
-        name = (try? c.decode(String.self, forKey: .product_name_en)) ?? ""
+        
+        // locals first
+        let code = try c.decode(String.self, forKey: .code)
+        let en  = try? c.decode(String.self, forKey: .product_name_en)
+        let any = try? c.decode(String.self, forKey: .product_name)
+        let brands = (try? c.decode(String.self, forKey: .brands))?
+            .split(separator: ",").first?
+            .trimmingCharacters(in: .whitespaces)
+        
+        barcode = code
+        
+        let computedName = [en, any, brands, code]
+            .compactMap { $0 }
+            .first!
+            .trimmingCharacters(in: .whitespaces)
+        name = computedName
+        
         nutriScore = try? c.decode(String.self, forKey: .nutriscore_grade)
         if let n = try? c.nestedContainer(keyedBy: N.self, forKey: .nutriments) {
             kcalPer100g = try n.decodeIfPresent(Double.self, forKey: .energy_kcal_100g)
         } else { kcalPer100g = nil }
+    }
+    
+    // Allow manual construction (not just decoding)
+    init(barcode: String, name: String, kcalPer100g: Double?, nutriScore: String?) {
+        self.barcode = barcode
+        self.name = name
+        self.kcalPer100g = kcalPer100g
+        self.nutriScore = nutriScore
+    }
+    init(from product: Product) {
+        self.init(
+            barcode: product.barcode,
+            name: product.name,
+            kcalPer100g: product.kcalPer100g,
+            nutriScore: product.nutriScore
+        )
     }
 }
 
@@ -242,7 +289,11 @@ struct MacroGoal: Identifiable {
 struct MacroRing: View {
     let g: MacroGoal
     private var col: Color {
-        switch g.kind { case .carbs: .teal; case .fat: .purple; case .protein: .orange }
+        switch g.kind {
+        case .carbs:   return .teal
+        case .fat:     return .purple
+        case .protein: return .orange
+        }
     }
     private var title: String {
         switch g.kind { case .carbs: "Carbs"; case .fat: "Fat"; case .protein: "Protein" }
@@ -351,21 +402,29 @@ struct RootView: View {
 }
 
 //────────────────────────────────────────────
-// MARK: – Networking  (English-only search)
+// MARK: – Networking  (improved search)
 //────────────────────────────────────────────
 enum API {
     static func product(code: String) async throws -> Product {
-        try await fetch(URL(string: "\(kOFF)/api/v2/product/\(code).json?lc=en")!)
+        try await fetch(URL(string: "\(kOFF)/api/v2/product/\(code).json")!)
     }
-    static func search(_ q: String) async throws -> [ProductLite] {
+    static func search(_ qRaw: String) async throws -> [ProductLite] {
+        // Normalize query
+        var q = qRaw.trimmingCharacters(in: .whitespacesAndNewlines)
+        q = q.replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+        guard q.count >= 2 else { return [] }
+        
+        // Use v2 search with simple mode + popularity sort
         var c = URLComponents(string: "\(kOFF)/api/v2/search")!
+        let uiLang = Locale.current.language.languageCode?.identifier ?? "en"
         c.queryItems = [
-            .init(name: "search_terms",   value: q),
-            .init(name: "languages_tags", value: "en"),
-            .init(name: "page_size",      value: "20"),
-            .init(name: "sort_by",        value: "unique_scans_n"),
+            .init(name: "search_terms",    value: q),
+            .init(name: "search_simple",   value: "1"),
+            .init(name: "page_size",       value: "25"),
+            .init(name: "sort_by",         value: "popularity_key"),
+            .init(name: "languages_tags",  value: "\(uiLang),en"),
             .init(name: "fields",
-                  value: "code,product_name_en,nutriscore_grade,nutriments.energy-kcal_100g")
+                  value: "code,product_name_en,product_name,brands,nutriscore_grade,nutriments.energy-kcal_100g")
         ]
         struct Resp: Decodable { let products: [ProductLite] }
         let resp: Resp = try await fetch(c.url!)
@@ -388,7 +447,9 @@ struct SearchSheet: View {
     @State private var q = ""
     @State private var hits: [ProductLite] = []
     @State private var loading = false
+    @State private var searchTask: Task<Void, Never>? = nil
     var pick: (Product) -> Void
+    
     var body: some View {
         NavigationStack {
             List {
@@ -413,21 +474,41 @@ struct SearchSheet: View {
                     .contentShape(Rectangle())
                     .onTapGesture { Task { await choose(p) } }
                 }
-                if !loading && hits.isEmpty && q.count >= 3 {
+                if !loading && hits.isEmpty && q.trimmingCharacters(in: .whitespaces).count >= 2 {
                     Text("No matches").foregroundStyle(.secondary)
                 }
             }
             .navigationTitle("Search food")
             .searchable(text: $q, prompt: "Start typing…")
-            .onChange(of: q) { Task { await performSearch() } }
+            .onChange(of: q) { newValue in
+                searchTask?.cancel()
+                searchTask = Task { await performSearch(for: newValue) }
+            }
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close", role: .cancel) { dismiss() } } }
         }
     }
-    private func performSearch() async {
-        guard q.count >= 3 else { hits = []; return }
-        loading = true; defer { loading = false }
-        hits = (try? await API.search(q)) ?? []
+    
+    private func performSearch(for text: String) async {
+        let query = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if query.isEmpty { hits = []; return }
+        do { try await Task.sleep(nanoseconds: 250_000_000) } catch { return } // cancelled
+        
+        // Barcode direct lookup if it looks like an EAN/UPC
+        if query.range(of: #"^\d{8,14}$"#, options: .regularExpression) != nil {
+            loading = true
+            defer { loading = false }
+            if let p = try? await API.product(code: query) {
+                hits = [ProductLite(from: p)]
+                return
+            }
+        }
+        guard query.count >= 2 else { hits = []; return }
+        loading = true
+        defer { loading = false }
+        guard !Task.isCancelled else { return }
+        hits = (try? await API.search(query)) ?? []
     }
+    
     private func choose(_ lite: ProductLite) async {
         if let p = try? await API.product(code: lite.barcode) { pick(p); dismiss() }
     }
@@ -527,27 +608,50 @@ struct EditSheet: View {
 }
 
 //────────────────────────────────────────────
-// MARK: – Barcode scanner wrapper
+// MARK: – Barcode scanner wrapper (auto-capture)
 //────────────────────────────────────────────
 struct ScannerSheet: UIViewControllerRepresentable {
     var got: (String) -> Void
     func makeCoordinator() -> Coord { Coord(self) }
     func makeUIViewController(context: Context) -> DataScannerViewController {
-        let vc = DataScannerViewController(recognizedDataTypes: [.barcode()],
-                                           qualityLevel: .balanced,
-                                           recognizesMultipleItems: false,
-                                           isGuidanceEnabled: true,
-                                           isHighlightingEnabled: true)
+        let vc = DataScannerViewController(
+            recognizedDataTypes: [.barcode()],
+            qualityLevel: .balanced,
+            recognizesMultipleItems: false, // only want first hit
+            isGuidanceEnabled: true,
+            isHighlightingEnabled: true
+        )
         vc.delegate = context.coordinator
         try? vc.startScanning()
         return vc
     }
     func updateUIViewController(_ ui: DataScannerViewController, context: Context) {}
+    
     final class Coord: NSObject, DataScannerViewControllerDelegate {
-        let parent: ScannerSheet; init(_ p: ScannerSheet) { parent = p }
+        let parent: ScannerSheet
+        private var didCapture = false
+        init(_ p: ScannerSheet) { parent = p }
+        
+        // Auto-capture when a new item appears
+        func dataScanner(_ s: DataScannerViewController, didAdd addedItems: [RecognizedItem], allItems: [RecognizedItem]) {
+            guard !didCapture else { return }
+            if let code = addedItems.compactMap({ item -> String? in
+                if case .barcode(let b) = item { return b.payloadStringValue }
+                return nil
+            }).first {
+                didCapture = true
+                parent.got(code)
+                s.dismiss(animated: true)
+            }
+        }
+        
+        // Fallback: tap still works if needed
         func dataScanner(_ s: DataScannerViewController, didTapOn item: RecognizedItem) {
+            guard !didCapture else { return }
             if case .barcode(let b) = item, let code = b.payloadStringValue {
-                parent.got(code); s.dismiss(animated: true)
+                didCapture = true
+                parent.got(code)
+                s.dismiss(animated: true)
             }
         }
     }
