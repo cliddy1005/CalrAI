@@ -1,17 +1,28 @@
 //
 //  CalrAI.swift
-//  CalrAI v1.3.1  (Smart search + ProductRow refactor + auto barcode capture)
+//  CalrAI v1.5 (Location-aware search + nearby shops + own-label boost + auto barcode)
 //  iOS 17+, Xcode 15
 //
 
 import SwiftUI
 import VisionKit
+import CoreLocation
+import MapKit
 
 //────────────────────────────────────────────
 // MARK: – Constants®
 //────────────────────────────────────────────
 fileprivate let kOFF = "https://world.openfoodfacts.org"
-fileprivate let kUA  = "CalrAI-Demo/1.3.1"
+fileprivate let kUA  = "CalrAI-Demo/1.5"
+
+// Optionally helpful retailer names (used for proximity boost / slugging fallbacks)
+fileprivate let kRetailerNames: [String] = [
+    // UK / IE
+    "Tesco","Sainsbury's","Sainsburys","Asda","Morrisons","Aldi","Lidl",
+    "Co-op","Coop","Waitrose","Iceland","Marks & Spencer","M&S","Ocado","SuperValu","Dunnes",
+    // Generic
+    "Supermarket","Grocery"
+]
 
 //────────────────────────────────────────────
 // MARK: – User profile & macro-calculator
@@ -192,10 +203,11 @@ struct ProductLite: Decodable, Identifiable {
     let kcalPer100g: Double?
     let nutriScore: String?
     let brands: String?
+    let stores: String?      // optional; OFF sometimes fills this
     let uniqueScans: Int?
     
     private enum K: String, CodingKey {
-        case code, product_name_en, product_name, brands, nutriscore_grade, nutriments, unique_scans_n
+        case code, product_name_en, product_name, brands, stores, nutriscore_grade, nutriments, unique_scans_n
     }
     private enum N: String, CodingKey { case energy_kcal_100g = "energy-kcal_100g" }
     init(from d: Decoder) throws {
@@ -204,6 +216,7 @@ struct ProductLite: Decodable, Identifiable {
         let en  = try? c.decode(String.self, forKey: .product_name_en)
         let any = try? c.decode(String.self, forKey: .product_name)
         let brandsVal = try? c.decode(String.self, forKey: .brands)
+        let storesVal = try? c.decode(String.self, forKey: .stores)
         
         barcode = code
         var computedName: String
@@ -215,6 +228,7 @@ struct ProductLite: Decodable, Identifiable {
         
         nutriScore = try? c.decode(String.self, forKey: .nutriscore_grade)
         brands = brandsVal
+        stores = storesVal
         uniqueScans = try? c.decode(Int.self, forKey: .unique_scans_n)
         
         if let n = try? c.nestedContainer(keyedBy: N.self, forKey: .nutriments) {
@@ -222,18 +236,104 @@ struct ProductLite: Decodable, Identifiable {
         } else { kcalPer100g = nil }
     }
     
-    // Manual init for barcode path if needed
-    init(barcode: String, name: String, kcalPer100g: Double?, nutriScore: String?, brands: String?, uniqueScans: Int?) {
-        self.barcode = barcode
-        self.name = name
-        self.kcalPer100g = kcalPer100g
-        self.nutriScore = nutriScore
-        self.brands = brands
-        self.uniqueScans = uniqueScans
+    init(barcode: String, name: String, kcalPer100g: Double?, nutriScore: String?, brands: String?, stores: String?, uniqueScans: Int?) {
+        self.barcode = barcode; self.name = name
+        self.kcalPer100g = kcalPer100g; self.nutriScore = nutriScore
+        self.brands = brands; self.stores = stores; self.uniqueScans = uniqueScans
     }
     init(from product: Product) {
-        self.init(barcode: product.barcode, name: product.name, kcalPer100g: product.kcalPer100g, nutriScore: product.nutriScore, brands: nil, uniqueScans: nil)
+        self.init(barcode: product.barcode, name: product.name, kcalPer100g: product.kcalPer100g, nutriScore: product.nutriScore, brands: nil, stores: nil, uniqueScans: nil)
     }
+}
+
+//────────────────────────────────────────────
+// MARK: – Location services & nearby shops
+//────────────────────────────────────────────
+final class LocationService: NSObject, ObservableObject, CLLocationManagerDelegate {
+    @Published var status: CLAuthorizationStatus = .notDetermined
+    @Published var location: CLLocation?
+    private let mgr = CLLocationManager()
+    
+    override init() {
+        super.init()
+        mgr.delegate = self
+    }
+    func request() {
+        guard CLLocationManager.locationServicesEnabled() else { return }
+        mgr.requestWhenInUseAuthorization()
+        mgr.startUpdatingLocation()
+    }
+    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        Task { @MainActor in self.status = status }
+        if status == .authorizedWhenInUse || status == .authorizedAlways { manager.startUpdatingLocation() }
+    }
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let last = locations.last else { return }
+        Task { @MainActor in self.location = last }
+    }
+}
+
+struct Store: Identifiable, Hashable {
+    var id: String { name + "\(Int(distanceMeters))" }
+    let name: String
+    let distanceMeters: Double
+    var distanceString: String {
+        let km = distanceMeters / 1000.0
+        return km < 1 ? "\(Int(distanceMeters)) m" : String(format: "%.1f km", km)
+    }
+}
+
+enum NearbyStoresService {
+    static func find(around loc: CLLocation) async -> [Store] {
+        let queries = kRetailerNames
+        var found: [Store] = []
+        for q in queries {
+            let req = MKLocalSearch.Request()
+            req.naturalLanguageQuery = q
+            req.region = MKCoordinateRegion(center: loc.coordinate, latitudinalMeters: 5000, longitudinalMeters: 5000)
+            let search = MKLocalSearch(request: req)
+            if let resp = try? await search.start() {
+                for item in resp.mapItems.prefix(6) {
+                    let name = item.name?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "Shop"
+                    let d = item.placemark.location?.distance(from: loc) ?? .greatestFiniteMagnitude
+                    found.append(Store(name: name, distanceMeters: d))
+                }
+            }
+        }
+        var best = [String: Store]()
+        for s in found {
+            if let prev = best[s.name] {
+                if s.distanceMeters < prev.distanceMeters { best[s.name] = s }
+            } else { best[s.name] = s }
+        }
+        return best.values.sorted { $0.distanceMeters < $1.distanceMeters }.prefix(12).map { $0 }
+    }
+}
+
+func reverseGeocodeCountry(from loc: CLLocation) async -> String? {
+    let geo = CLGeocoder()
+    do {
+        let placemarks = try await geo.reverseGeocodeLocation(loc)
+        return placemarks.first?.country
+    } catch { return nil }
+}
+
+// OFF slug helpers (convert “Sainsbury’s” → “sainsbury-s”)
+fileprivate func offSlug(_ s: String) -> String {
+    let lowered = s.folding(options: .diacriticInsensitive, locale: .current).lowercased()
+    let replaced = lowered.replacingOccurrences(of: "[^a-z0-9]+", with: "-", options: .regularExpression)
+    return replaced.trimmingCharacters(in: CharacterSet(charactersIn: "-"))
+}
+fileprivate let storeSlugOverrides: [String:String] = [
+    "sainsbury's": "sainsbury-s",
+    "m&s": "marks-and-spencer",
+    "marks & spencer": "marks-and-spencer",
+    "co-op": "the-co-operative",
+    "coop": "the-co-operative"
+]
+fileprivate func offStoreSlug(_ name: String) -> String {
+    let key = name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    return storeSlugOverrides[key] ?? offSlug(key)
 }
 
 //────────────────────────────────────────────
@@ -318,9 +418,7 @@ struct RootView: View {
         Button {
             vm.activeMeal = meal
             trigger()
-        } label: {
-            HStack { Image(systemName: icon); Text(text) }
-        }
+        } label: { HStack { Image(systemName: icon); Text(text) } }
     }
     
     var body: some View {
@@ -375,96 +473,66 @@ struct RootView: View {
 }
 
 //────────────────────────────────────────────
-// MARK: – Networking  (Smart search)
+// MARK: – Networking  (Location-aware search)
 //────────────────────────────────────────────
 enum API {
-    // Single product by barcode
+    // Product by barcode
     static func product(code: String) async throws -> Product {
         try await fetch(URL(string: "\(kOFF)/api/v2/product/\(code).json")!)
     }
     
-    // Low-level helpers
     private static func baseFields() -> String {
-        "code,product_name_en,product_name,brands,nutriscore_grade,unique_scans_n,nutriments.energy-kcal_100g"
+        "code,product_name,brands,stores,unique_scans_n,nutriments.energy-kcal_100g"
     }
     private static func langList() -> String {
         let ui = Locale.current.language.languageCode?.identifier ?? "en"
         return "\(ui),en"
     }
-    private static func searchSimple(_ q: String, pageSize: Int = 50) async throws -> [ProductLite] {
-        var c = URLComponents(string: "\(kOFF)/api/v2/search")!
-        c.queryItems = [
-            .init(name: "search_terms",   value: q),
-            .init(name: "search_simple",  value: "1"),
-            .init(name: "languages_tags", value: langList()),
-            .init(name: "page_size",      value: "\(pageSize)"),
-            .init(name: "sort_by",        value: "popularity_key"),
-            .init(name: "fields",         value: baseFields()),
-            .init(name: "nocache",        value: "1")
-        ]
-        struct Resp: Decodable { let products: [ProductLite] }
-        let resp: Resp = try await fetch(c.url!)
-        return resp.products
-    }
-    private static func searchByCategoryTag(_ q: String, pageSize: Int = 50) async throws -> [ProductLite] {
-        var c = URLComponents(string: "\(kOFF)/api/v2/search")!
-        c.queryItems = [
-            .init(name: "categories_tags_en", value: q),
-            .init(name: "languages_tags",     value: langList()),
-            .init(name: "page_size",          value: "\(pageSize)"),
-            .init(name: "sort_by",            value: "popularity_key"),
-            .init(name: "fields",             value: baseFields()),
-            .init(name: "nocache",            value: "1")
-        ]
-        struct Resp: Decodable { let products: [ProductLite] }
-        let resp: Resp = try await fetch(c.url!)
-        return resp.products
-    }
-    private static func searchByBrandTag(_ q: String, pageSize: Int = 50) async throws -> [ProductLite] {
-        var c = URLComponents(string: "\(kOFF)/api/v2/search")!
-        c.queryItems = [
-            .init(name: "brands_tags",    value: q),
-            .init(name: "languages_tags", value: langList()),
-            .init(name: "page_size",      value: "\(pageSize)"),
-            .init(name: "sort_by",        value: "popularity_key"),
-            .init(name: "fields",         value: baseFields()),
-            .init(name: "nocache",        value: "1")
-        ]
-        struct Resp: Decodable { let products: [ProductLite] }
-        let resp: Resp = try await fetch(c.url!)
-        return resp.products
-    }
     
-    // High-level smart search
-    static func searchSmart(_ qRaw: String) async throws -> [ProductLite] {
+    /// Location-aware search: biases by country + nearby stores/brands
+    static func searchSmart(
+        _ qRaw: String,
+        countryHint: String?,
+        nearbyStores: [Store]
+    ) async throws -> [ProductLite] {
         var q = qRaw.trimmingCharacters(in: .whitespacesAndNewlines)
         q = q.replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
         guard !q.isEmpty else { return [] }
         
         // Barcode direct path
         if q.range(of: #"^\d{8,14}$"#, options: .regularExpression) != nil {
-            if let p: Product = try? await product(code: q) {
-                return [ProductLite(from: p)]
-            }
+            if let p: Product = try? await product(code: q) { return [ProductLite(from: p)] }
         }
         
-        // Run multiple queries in parallel
-        async let a = searchSimple(q)
-        async let b = searchByCategoryTag(q)
-        async let c = searchByBrandTag(q)
+        // Build OR lists from nearby store names (limit to 3 nearest)
+        let topStores = Array(nearbyStores.prefix(3))
+        let storeSlugs = topStores.map { offStoreSlug($0.name) }
+        let brandSlugs = storeSlugs  // retailer own-label often matches brand
         
-        // Break up for the compiler
-        let ra = (try? await a) ?? []
-        let rb = (try? await b) ?? []
-        let rc = (try? await c) ?? []
-        let combined = ra + rb + rc
+        var c = URLComponents(string: "\(kOFF)/api/v2/search")!
+        var items: [URLQueryItem] = [
+            .init(name: "search_terms",   value: q),
+            .init(name: "search_simple",  value: "1"),
+            .init(name: "languages_tags", value: langList()),
+            .init(name: "page_size",      value: "80"),
+            .init(name: "sort_by",        value: "popularity_key"),
+            .init(name: "fields",         value: baseFields()),
+            .init(name: "nocache",        value: "1")
+        ]
+        if let country = countryHint, !country.isEmpty {
+            items.append(.init(name: "countries_tags_en", value: country))
+        }
+        if !storeSlugs.isEmpty {
+            items.append(.init(name: "stores_tags_en", value: storeSlugs.joined(separator: "|")))
+        }
+        if !brandSlugs.isEmpty {
+            items.append(.init(name: "brands_tags_en", value: brandSlugs.joined(separator: "|")))
+        }
+        c.queryItems = items
         
-        // Deduplicate by barcode
-        var seen = Set<String>()
-        let uniq = combined.filter { seen.insert($0.barcode).inserted }
-        
-        // Rank (simple heuristic)
-        return SearchRanker.rank(results: uniq, query: q)
+        struct Resp: Decodable { let products: [ProductLite] }
+        let resp: Resp = try await fetch(c.url!)
+        return resp.products
     }
     
     // Fetch helper
@@ -478,49 +546,52 @@ enum API {
 }
 
 //────────────────────────────────────────────
-// MARK: – Search ranking utils
+// MARK: – Search ranking utils (nearby own-label boost)
 //────────────────────────────────────────────
 enum SearchRanker {
     static func norm(_ s: String) -> String {
         s.folding(options: .diacriticInsensitive, locale: .current).lowercased()
     }
-    static func tokens(_ s: String) -> [String] {
-        norm(s).split(whereSeparator: { !$0.isLetter && !$0.isNumber }).map(String.init).filter { !$0.isEmpty }
-    }
-    static func coverageScore(queryTokens: [String], in text: String?) -> Double {
-        guard let t = text, !t.isEmpty else { return 0 }
-        let T = norm(t)
-        let hits = queryTokens.filter { T.contains($0) }.count
-        return queryTokens.isEmpty ? 0 : Double(hits) / Double(queryTokens.count)
-    }
     static func popularityScore(_ n: Int?) -> Double {
         guard let n else { return 0 }
         return log(Double(n) + 1) / log(10.0)
     }
-    static func rank(results: [ProductLite], query: String) -> [ProductLite] {
-        let qTokens = tokens(query)
+    static func brandOrStoreBoost(_ p: ProductLite, nearby: [Store], nearestOnly: Bool = true) -> Double {
+        let names = (nearestOnly ? Array(nearby.prefix(1)) : nearby).map { norm($0.name) }
+        let brand = norm(p.brands ?? "")
+        let store = norm(p.stores ?? "")
+        let hit = names.contains { brand.contains($0) || store.contains($0) }
+        return hit ? 1.5 : 0.0
+    }
+    static func rank(results: [ProductLite], query: String, nearbyStores: [Store]) -> [ProductLite] {
+        let qn = norm(query)
         return results.sorted { a, b in
-            let aName = coverageScore(queryTokens: qTokens, in: a.name)
-            let bName = coverageScore(queryTokens: qTokens, in: b.name)
-            let aBrand = coverageScore(queryTokens: qTokens, in: a.brands)
-            let bBrand = coverageScore(queryTokens: qTokens, in: b.brands)
+            // Prefer items that match the nearest retailer brand/store
+            let aBoost = brandOrStoreBoost(a, nearby: nearbyStores, nearestOnly: true)
+            let bBoost = brandOrStoreBoost(b, nearby: nearbyStores, nearestOnly: true)
+            if aBoost != bBoost { return aBoost > bBoost }
+            
+            // Then prefer name contains the query
+            let aMatch = norm(a.name).contains(qn) ? 1 : 0
+            let bMatch = norm(b.name).contains(qn) ? 1 : 0
+            if aMatch != bMatch { return aMatch > bMatch }
+            
+            // Popularity as tie-breaker
             let aPop = popularityScore(a.uniqueScans)
             let bPop = popularityScore(b.uniqueScans)
-            
-            if aName != bName { return aName > bName }
-            if aBrand != bBrand { return aBrand > bBrand }
             if aPop != bPop { return aPop > bPop }
+            
+            // Stable fallback
             return a.name.localizedCaseInsensitiveCompare(b.name) == .orderedAscending
         }
     }
 }
 
 //────────────────────────────────────────────
-// MARK: – Search row + Search sheet (refactored)
+// MARK: – Search UI
 //────────────────────────────────────────────
 struct ProductRow: View {
     let product: ProductLite
-    
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
@@ -534,18 +605,36 @@ struct ProductRow: View {
                 }
             }
             HStack(spacing: 8) {
-                if let kcal = product.kcalPer100g {
-                    Text("\(Int(kcal)) kcal / 100 g")
-                }
-                if let brands = product.brands, !brands.isEmpty {
-                    Text(brands)
-                }
-                if let scans = product.uniqueScans {
-                    Text("pop: \(scans)")
-                }
+                if let kcal = product.kcalPer100g { Text("\(Int(kcal)) kcal / 100 g") }
+                if let brands = product.brands, !brands.isEmpty { Text(brands) }
+                if let stores = product.stores, !stores.isEmpty { Text("at \(stores)") }
+                if let scans = product.uniqueScans { Text("pop: \(scans)") }
             }
-            .font(.caption)
-            .foregroundColor(.secondary)
+            .font(.caption).foregroundColor(.secondary)
+        }
+    }
+}
+
+struct ShopsStrip: View {
+    let stores: [Store]
+    var body: some View {
+        if stores.isEmpty { EmptyView() }
+        else {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(stores) { s in
+                        HStack(spacing: 6) {
+                            Image(systemName: "mappin.and.ellipse")
+                            Text(s.name)
+                            Text("· \(s.distanceString)").foregroundStyle(.secondary)
+                        }
+                        .font(.caption)
+                        .padding(.horizontal, 10).padding(.vertical, 6)
+                        .background(RoundedRectangle(cornerRadius: 12).fill(Color(.systemGray6)))
+                    }
+                }.padding(.horizontal)
+            }
+            .padding(.vertical, 4)
         }
     }
 }
@@ -555,22 +644,32 @@ struct SearchSheet: View {
     @State private var q = ""
     @State private var hits: [ProductLite] = []
     @State private var loading = false
+    @State private var stores: [Store] = []
+    @State private var countryHint: String?
     @State private var searchTask: Task<Void, Never>? = nil
+    @StateObject private var loc = LocationService()
     var pick: (Product) -> Void
     
     var body: some View {
         NavigationStack {
-            List {
-                if loading {
-                    ProgressView().frame(maxWidth: .infinity, alignment: .center)
+            VStack(spacing: 0) {
+                if !stores.isEmpty { ShopsStrip(stores: stores) }
+                else if loc.status == .denied || loc.status == .restricted {
+                    Text("Location is off — showing global results.")
+                        .font(.caption).foregroundStyle(.secondary).padding(.top, 6)
                 }
-                ForEach(hits) { p in
-                    ProductRow(product: p)
-                        .contentShape(Rectangle())
-                        .onTapGesture { Task { await choose(p) } }
-                }
-                if !loading && hits.isEmpty && q.trimmingCharacters(in: .whitespaces).count >= 2 {
-                    Text("No matches").foregroundStyle(.secondary)
+                List {
+                    if loading {
+                        ProgressView().frame(maxWidth: .infinity, alignment: .center)
+                    }
+                    ForEach(hits) { p in
+                        ProductRow(product: p)
+                            .contentShape(Rectangle())
+                            .onTapGesture { Task { await choose(p) } }
+                    }
+                    if !loading && hits.isEmpty && q.trimmingCharacters(in: .whitespaces).count >= 2 {
+                        Text("No matches").foregroundStyle(.secondary)
+                    }
                 }
             }
             .navigationTitle("Search food")
@@ -583,30 +682,49 @@ struct SearchSheet: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close", role: .cancel) { dismiss() }
                 }
+                ToolbarItem(placement: .primaryAction) {
+                    if loc.status == .notDetermined {
+                        Button("Use Location") { loc.request() }
+                    }
+                }
             }
+            .onAppear {
+                if loc.status == .notDetermined { loc.request() }
+                Task { await refreshGeoContext() }
+            }
+            .onChange(of: loc.location) { _ in Task { await refreshGeoContext() } }
+        }
+    }
+    
+    private func refreshGeoContext() async {
+        guard let here = loc.location else { return }
+        let nearby = await NearbyStoresService.find(around: here)
+        await MainActor.run { self.stores = nearby }
+        if let country = await reverseGeocodeCountry(from: here) {
+            await MainActor.run { self.countryHint = country }
         }
     }
     
     private func performSearch(for text: String) async {
         let query = text.trimmingCharacters(in: .whitespacesAndNewlines)
         if query.isEmpty { hits = []; return }
-        do { try await Task.sleep(nanoseconds: 250_000_000) } catch { return } // debounce, allow cancel
+        do { try await Task.sleep(nanoseconds: 250_000_000) } catch { return } // debounce
         guard !Task.isCancelled else { return }
         
         loading = true
         defer { loading = false }
         
-        if let results = try? await API.searchSmart(query) {
-            hits = results
+        let base = (try? await API.searchSmart(query, countryHint: countryHint, nearbyStores: stores)) ?? []
+        if stores.isEmpty {
+            hits = base
         } else {
-            hits = []
+            hits = SearchRanker.rank(results: base, query: query, nearbyStores: stores)
         }
     }
     
     private func choose(_ lite: ProductLite) async {
         if let p = try? await API.product(code: lite.barcode) {
-            pick(p)
-            dismiss()
+            pick(p); dismiss()
         }
     }
 }
@@ -714,7 +832,7 @@ struct ScannerSheet: UIViewControllerRepresentable {
         let vc = DataScannerViewController(
             recognizedDataTypes: [.barcode()],
             qualityLevel: .balanced,
-            recognizesMultipleItems: false, // first hit only; change to true to add many
+            recognizesMultipleItems: false,
             isGuidanceEnabled: true,
             isHighlightingEnabled: true
         )
@@ -723,32 +841,22 @@ struct ScannerSheet: UIViewControllerRepresentable {
         return vc
     }
     func updateUIViewController(_ ui: DataScannerViewController, context: Context) {}
-    
     final class Coord: NSObject, DataScannerViewControllerDelegate {
         let parent: ScannerSheet
         private var didCapture = false
         init(_ p: ScannerSheet) { parent = p }
-        
-        // Auto-capture when a new barcode appears
         func dataScanner(_ s: DataScannerViewController, didAdd addedItems: [RecognizedItem], allItems: [RecognizedItem]) {
             guard !didCapture else { return }
             if let code = addedItems.compactMap({ item -> String? in
-                if case .barcode(let b) = item { return b.payloadStringValue }
-                return nil
+                if case .barcode(let b) = item { return b.payloadStringValue }; return nil
             }).first {
-                didCapture = true
-                parent.got(code)
-                s.dismiss(animated: true)
+                didCapture = true; parent.got(code); s.dismiss(animated: true)
             }
         }
-        
-        // Fallback: tap-to-capture still works
         func dataScanner(_ s: DataScannerViewController, didTapOn item: RecognizedItem) {
             guard !didCapture else { return }
             if case .barcode(let b) = item, let code = b.payloadStringValue {
-                didCapture = true
-                parent.got(code)
-                s.dismiss(animated: true)
+                didCapture = true; parent.got(code); s.dismiss(animated: true)
             }
         }
     }
