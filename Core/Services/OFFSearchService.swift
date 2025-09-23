@@ -1,56 +1,71 @@
+// Core/Services/OFFSearchService.swift
 import Foundation
 
-fileprivate let kOFF = "https://world.openfoodfacts.org"
-fileprivate let kUA  = "CalrAI-Demo/1.5"
+/// Open Food Facts implementation of SearchService
+struct OFFSearchService: SearchService {
+    private let base = "https://world.openfoodfacts.net"
 
-final class OFFSearchService: SearchService {
+    // MARK: - Product by barcode
     func product(code: String) async throws -> Product {
-        try await fetch(URL(string: "\\(kOFF)/api/v2/product/\\(code).json")!)
+        let url = URL(string: "\(base)/api/v2/product/\(code).json")!
+        return try await fetch(url)
     }
 
-    func search(query qRaw: String, country: String?, nearbyStoreSlugs: [String]) async throws -> [ProductLite] {
-        var q = qRaw.trimmingCharacters(in: .whitespacesAndNewlines)
-        q = q.replacingOccurrences(of: #"\\s+"#, with: " ", options: .regular_expression)
-        guard !q.isEmpty else { return [] }
+    // MARK: - Search
+    func search(query: String, country: String?, nearbyStoreSlugs: [String]) async throws -> [ProductLite] {
+        var q = query.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        // barcode fast path
-        if q.range(of: #"^\\d{8,14}$"#, options: .regular_expression) != nil {
-            if let p: Product = try? await product(code: q) { return [ProductLite(from: p)] }
+        // Collapse multiple spaces
+        q = q.replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+
+        // Barcode fast path
+        if q.range(of: #"^\d{8,14}$"#, options: .regularExpression) != nil {
+            if let p: Product = try? await product(code: q) {
+                return [ProductLite(from: p)]
+            }
         }
 
-        var c = URLComponents(string: "\\(kOFF)/api/v2/search")!
+        var c = URLComponents(string: "\(base)/api/v2/search")!
         var items: [URLQueryItem] = [
-            .init(name: "search_terms",   value: q),
-            .init(name: "search_simple",  value: "1"),
-            .init(name: "languages_tags", value: langList()),
-            .init(name: "page_size",      value: "80"),
-            .init(name: "sort_by",        value: "popularity_key"),
-            .init(name: "fields",         value: "code,product_name,brands,stores,unique_scans_n,nutriments.energy-kcal_100g"),
-            .init(name: "nocache",        value: "1")
+            .init(name: "search_terms", value: q),
+            .init(name: "page_size", value: "30"),
+            .init(name: "sort_by", value: "unique_scans_n"),
+            .init(name: "fields", value: "code,product_name_en,nutriscore_grade,nutriments.energy-kcal_100g"),
+            .init(name: "languages_tags", value: langList())
         ]
-        if let country, !country.isEmpty { items.append(.init(name: "countries_tags_en", value: country)) }
-        if !nearbyStoreSlugs.isEmpty {
-            let or = nearbyStoreSlugs.joined(separator: "|")
-            items.append(.init(name: "stores_tags_en", value: or))
-            items.append(.init(name: "brands_tags_en", value: or))
+
+        if let country = country {
+            items.append(.init(name: "countries_tags", value: country.lowercased()))
         }
+        if !nearbyStoreSlugs.isEmpty {
+            items.append(.init(name: "stores_tags", value: nearbyStoreSlugs.joined(separator: ",")))
+        }
+
         c.queryItems = items
 
         struct Resp: Decodable { let products: [ProductLite] }
         let resp: Resp = try await fetch(c.url!)
-        return resp.products
+        return resp.products.filter { !$0.name.trimmingCharacters(in: .whitespaces).isEmpty }
     }
 
-    // MARK: helpers
+    // MARK: - Language list
     private func langList() -> String {
-        let ui = Locale.current.language.languageCode?.identifier ?? "en"
-        return "\\(ui),en"
+        if let code = Locale.current.language.languageCode?.identifier {
+            return "\(code),en"
+        } else {
+            return "en"
+        }
     }
+
+    // MARK: - Networking
     private func fetch<T: Decodable>(_ url: URL) async throws -> T {
         var req = URLRequest(url: url)
-        req.setValue(kUA, forHTTPHeaderField: "User-Agent")
-        let (d, resp) = try await URLSession.shared.data(for: req)
-        guard (resp as? HTTPURLResponse)?.statusCode == 200 else { throw URLError(.badServerResponse) }
-        return try JSONDecoder().decode(T.self, from: d)
+        req.setValue("CalrAI/1.0 (iOS)", forHTTPHeaderField: "User-Agent")
+
+        let (data, resp) = try await URLSession.shared.data(for: req)
+        guard (resp as? HTTPURLResponse)?.statusCode == 200 else {
+            throw URLError(.badServerResponse)
+        }
+        return try JSONDecoder().decode(T.self, from: data)
     }
 }

@@ -7,7 +7,27 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		10E2DFE22E44112200BC9CE9 /* CalrAI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10E2DFE12E44112200BC9CE9 /* CalrAI.swift */; };
+		101474DA2E8354480046DD0F /* CalrAIApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101474D82E8354480046DD0F /* CalrAIApp.swift */; };
+		101474DB2E8354480046DD0F /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101474D72E8354480046DD0F /* AppEnvironment.swift */; };
+		101474E92E83545A0046DD0F /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101474DE2E83545A0046DD0F /* UserProfile.swift */; };
+		101474EA2E83545A0046DD0F /* SearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101474E32E83545A0046DD0F /* SearchService.swift */; };
+		101474EB2E83545A0046DD0F /* OFFSearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101474E22E83545A0046DD0F /* OFFSearchService.swift */; };
+		101474EC2E83545A0046DD0F /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101474E02E83545A0046DD0F /* LocationService.swift */; };
+		101474ED2E83545A0046DD0F /* SearchRanker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101474E62E83545A0046DD0F /* SearchRanker.swift */; };
+		101474EE2E83545A0046DD0F /* ProductModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101474DD2E83545A0046DD0F /* ProductModels.swift */; };
+		101474EF2E83545A0046DD0F /* OFFSlug.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101474E52E83545A0046DD0F /* OFFSlug.swift */; };
+		101474F02E83545A0046DD0F /* NearbyStoresService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101474E12E83545A0046DD0F /* NearbyStoresService.swift */; };
+		101474F12E83545A0046DD0F /* FoodEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101474DC2E83545A0046DD0F /* FoodEntry.swift */; };
+		101475002E8354670046DD0F /* ProductRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101474F82E8354670046DD0F /* ProductRow.swift */; };
+		101475012E8354670046DD0F /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101474FD2E8354670046DD0F /* SettingsView.swift */; };
+		101475022E8354670046DD0F /* DiaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101474F22E8354670046DD0F /* DiaryView.swift */; };
+		101475032E8354670046DD0F /* DiaryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101474F32E8354670046DD0F /* DiaryViewModel.swift */; };
+		101475042E8354670046DD0F /* EditSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101474F42E8354670046DD0F /* EditSheet.swift */; };
+		101475052E8354670046DD0F /* ShopsStrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101474FB2E8354670046DD0F /* ShopsStrip.swift */; };
+		101475062E8354670046DD0F /* ScannerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101474F62E8354670046DD0F /* ScannerSheet.swift */; };
+		101475072E8354670046DD0F /* SearchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101474FA2E8354670046DD0F /* SearchViewModel.swift */; };
+		101475082E8354670046DD0F /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101474F92E8354670046DD0F /* SearchView.swift */; };
+		101475152E835F200046DD0F /* MacroRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101475142E835F1A0046DD0F /* MacroRing.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -28,42 +48,33 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		101474D72E8354480046DD0F /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
+		101474D82E8354480046DD0F /* CalrAIApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalrAIApp.swift; sourceTree = "<group>"; };
+		101474DC2E83545A0046DD0F /* FoodEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodEntry.swift; sourceTree = "<group>"; };
+		101474DD2E83545A0046DD0F /* ProductModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductModels.swift; sourceTree = "<group>"; };
+		101474DE2E83545A0046DD0F /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
+		101474E02E83545A0046DD0F /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
+		101474E12E83545A0046DD0F /* NearbyStoresService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearbyStoresService.swift; sourceTree = "<group>"; };
+		101474E22E83545A0046DD0F /* OFFSearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OFFSearchService.swift; sourceTree = "<group>"; };
+		101474E32E83545A0046DD0F /* SearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchService.swift; sourceTree = "<group>"; };
+		101474E52E83545A0046DD0F /* OFFSlug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OFFSlug.swift; sourceTree = "<group>"; };
+		101474E62E83545A0046DD0F /* SearchRanker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchRanker.swift; sourceTree = "<group>"; };
+		101474F22E8354670046DD0F /* DiaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryView.swift; sourceTree = "<group>"; };
+		101474F32E8354670046DD0F /* DiaryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryViewModel.swift; sourceTree = "<group>"; };
+		101474F42E8354670046DD0F /* EditSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditSheet.swift; sourceTree = "<group>"; };
+		101474F62E8354670046DD0F /* ScannerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScannerSheet.swift; sourceTree = "<group>"; };
+		101474F82E8354670046DD0F /* ProductRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductRow.swift; sourceTree = "<group>"; };
+		101474F92E8354670046DD0F /* SearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchView.swift; sourceTree = "<group>"; };
+		101474FA2E8354670046DD0F /* SearchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchViewModel.swift; sourceTree = "<group>"; };
+		101474FB2E8354670046DD0F /* ShopsStrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopsStrip.swift; sourceTree = "<group>"; };
+		101474FD2E8354670046DD0F /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		1014750F2E8357730046DD0F /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		101475102E835A560046DD0F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		101475142E835F1A0046DD0F /* MacroRing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacroRing.swift; sourceTree = "<group>"; };
 		1054E66D2E3AC530006FBACF /* CalrAI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CalrAI.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1054E6812E3AC532006FBACF /* CalrAITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CalrAITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1054E68B2E3AC532006FBACF /* CalrAIUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CalrAIUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		10E2DFE12E44112200BC9CE9 /* CalrAI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalrAI.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
-
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		1054E6932E3AC532006FBACF /* Exceptions for "CalrAI" folder in "CalrAI" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = 1054E66C2E3AC530006FBACF /* CalrAI */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		1054E66F2E3AC530006FBACF /* CalrAI */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				1054E6932E3AC532006FBACF /* Exceptions for "CalrAI" folder in "CalrAI" target */,
-			);
-			path = CalrAI;
-			sourceTree = "<group>";
-		};
-		1054E6842E3AC532006FBACF /* CalrAITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = CalrAITests;
-			sourceTree = "<group>";
-		};
-		1054E68E2E3AC532006FBACF /* CalrAIUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = CalrAIUITests;
-			sourceTree = "<group>";
-		};
-/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		1054E66A2E3AC530006FBACF /* Frameworks */ = {
@@ -90,13 +101,128 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		101474D92E8354480046DD0F /* App */ = {
+			isa = PBXGroup;
+			children = (
+				101474D72E8354480046DD0F /* AppEnvironment.swift */,
+				101474D82E8354480046DD0F /* CalrAIApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		101474DF2E83545A0046DD0F /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				101474DC2E83545A0046DD0F /* FoodEntry.swift */,
+				101474DD2E83545A0046DD0F /* ProductModels.swift */,
+				101474DE2E83545A0046DD0F /* UserProfile.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		101474E42E83545A0046DD0F /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				101474E02E83545A0046DD0F /* LocationService.swift */,
+				101474E12E83545A0046DD0F /* NearbyStoresService.swift */,
+				101474E22E83545A0046DD0F /* OFFSearchService.swift */,
+				101474E32E83545A0046DD0F /* SearchService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		101474E72E83545A0046DD0F /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				101474E52E83545A0046DD0F /* OFFSlug.swift */,
+				101474E62E83545A0046DD0F /* SearchRanker.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		101474E82E83545A0046DD0F /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				101474DF2E83545A0046DD0F /* Models */,
+				101474E42E83545A0046DD0F /* Services */,
+				101474E72E83545A0046DD0F /* Utilities */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		101474F52E8354670046DD0F /* Diary */ = {
+			isa = PBXGroup;
+			children = (
+				101474F22E8354670046DD0F /* DiaryView.swift */,
+				101475142E835F1A0046DD0F /* MacroRing.swift */,
+				101474F32E8354670046DD0F /* DiaryViewModel.swift */,
+				101474F42E8354670046DD0F /* EditSheet.swift */,
+			);
+			path = Diary;
+			sourceTree = "<group>";
+		};
+		101474F72E8354670046DD0F /* Scanner */ = {
+			isa = PBXGroup;
+			children = (
+				101474F62E8354670046DD0F /* ScannerSheet.swift */,
+			);
+			path = Scanner;
+			sourceTree = "<group>";
+		};
+		101474FC2E8354670046DD0F /* Search */ = {
+			isa = PBXGroup;
+			children = (
+				101474F82E8354670046DD0F /* ProductRow.swift */,
+				101474F92E8354670046DD0F /* SearchView.swift */,
+				101474FA2E8354670046DD0F /* SearchViewModel.swift */,
+				101474FB2E8354670046DD0F /* ShopsStrip.swift */,
+			);
+			path = Search;
+			sourceTree = "<group>";
+		};
+		101474FE2E8354670046DD0F /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				101474FD2E8354670046DD0F /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		101474FF2E8354670046DD0F /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				101474F52E8354670046DD0F /* Diary */,
+				101474F72E8354670046DD0F /* Scanner */,
+				101474FC2E8354670046DD0F /* Search */,
+				101474FE2E8354670046DD0F /* Settings */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		1014750A2E8354750046DD0F /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				101475102E835A560046DD0F /* Info.plist */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		1014750E2E8357320046DD0F /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				1014750F2E8357730046DD0F /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
 		1054E6642E3AC530006FBACF = {
 			isa = PBXGroup;
 			children = (
-				10E2DFE12E44112200BC9CE9 /* CalrAI.swift */,
-				1054E66F2E3AC530006FBACF /* CalrAI */,
-				1054E6842E3AC532006FBACF /* CalrAITests */,
-				1054E68E2E3AC532006FBACF /* CalrAIUITests */,
+				1014750E2E8357320046DD0F /* Preview Content */,
+				1014750A2E8354750046DD0F /* Resources */,
+				101474FF2E8354670046DD0F /* Features */,
+				101474E82E83545A0046DD0F /* Core */,
+				101474D92E8354480046DD0F /* App */,
 				1054E66E2E3AC530006FBACF /* Products */,
 			);
 			sourceTree = "<group>";
@@ -126,9 +252,6 @@
 			);
 			dependencies = (
 			);
-			fileSystemSynchronizedGroups = (
-				1054E66F2E3AC530006FBACF /* CalrAI */,
-			);
 			name = CalrAI;
 			packageProductDependencies = (
 			);
@@ -149,9 +272,6 @@
 			dependencies = (
 				1054E6832E3AC532006FBACF /* PBXTargetDependency */,
 			);
-			fileSystemSynchronizedGroups = (
-				1054E6842E3AC532006FBACF /* CalrAITests */,
-			);
 			name = CalrAITests;
 			packageProductDependencies = (
 			);
@@ -171,9 +291,6 @@
 			);
 			dependencies = (
 				1054E68D2E3AC532006FBACF /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				1054E68E2E3AC532006FBACF /* CalrAIUITests */,
 			);
 			name = CalrAIUITests;
 			packageProductDependencies = (
@@ -255,7 +372,27 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				10E2DFE22E44112200BC9CE9 /* CalrAI.swift in Sources */,
+				101474E92E83545A0046DD0F /* UserProfile.swift in Sources */,
+				101474EA2E83545A0046DD0F /* SearchService.swift in Sources */,
+				101474EB2E83545A0046DD0F /* OFFSearchService.swift in Sources */,
+				101475002E8354670046DD0F /* ProductRow.swift in Sources */,
+				101475012E8354670046DD0F /* SettingsView.swift in Sources */,
+				101475022E8354670046DD0F /* DiaryView.swift in Sources */,
+				101475032E8354670046DD0F /* DiaryViewModel.swift in Sources */,
+				101475042E8354670046DD0F /* EditSheet.swift in Sources */,
+				101475052E8354670046DD0F /* ShopsStrip.swift in Sources */,
+				101475062E8354670046DD0F /* ScannerSheet.swift in Sources */,
+				101475072E8354670046DD0F /* SearchViewModel.swift in Sources */,
+				101475082E8354670046DD0F /* SearchView.swift in Sources */,
+				101474EC2E83545A0046DD0F /* LocationService.swift in Sources */,
+				101475152E835F200046DD0F /* MacroRing.swift in Sources */,
+				101474ED2E83545A0046DD0F /* SearchRanker.swift in Sources */,
+				101474EE2E83545A0046DD0F /* ProductModels.swift in Sources */,
+				101474EF2E83545A0046DD0F /* OFFSlug.swift in Sources */,
+				101474F02E83545A0046DD0F /* NearbyStoresService.swift in Sources */,
+				101474F12E83545A0046DD0F /* FoodEntry.swift in Sources */,
+				101474DA2E8354480046DD0F /* CalrAIApp.swift in Sources */,
+				101474DB2E8354480046DD0F /* AppEnvironment.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -297,12 +434,15 @@
 				CODE_SIGN_ENTITLEMENTS = CalrAI.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"CalrAI/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 6BQ4Q6RSTC;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = CalrAI/Info.plist;
+				INFOPLIST_FILE = Resources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "";
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSCameraUsageDescription = "We use the camera to scan food barcodes.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We use your location to improve search results and show nearby shops.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -329,12 +469,15 @@
 				CODE_SIGN_ENTITLEMENTS = CalrAI.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"CalrAI/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 6BQ4Q6RSTC;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = CalrAI/Info.plist;
+				INFOPLIST_FILE = Resources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "";
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSCameraUsageDescription = "We use the camera to scan food barcodes.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We use your location to improve search results and show nearby shops.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

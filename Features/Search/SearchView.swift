@@ -1,59 +1,72 @@
 import SwiftUI
 
 struct SearchView: View {
-    @Environment(\.appEnvironment) private var env
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var vm: SearchViewModel
-    var pick: (Product) -> Void
-    @State private var searchTask: Task<Void, Never>? = nil
+    @Environment(\.appEnvironment) private var env
 
-    init(pick: @escaping (Product) -> Void) {
-        self._vm = StateObject(wrappedValue: SearchViewModel(search: AppEnvironment.live.search,
-                                                             location: AppEnvironment.live.location))
-        self.pick = pick
-    }
+    @StateObject private var vm = SearchViewModel()
+
+    var pick: (Product) -> Void
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                ShopsStrip(stores: vm.stores)
-                List {
-                    if vm.loading { ProgressView().frame(maxWidth: .infinity, alignment: .center) }
-                    ForEach(vm.results) { p in
-                        ProductRow(product: p)
-                            .contentShape(Rectangle())
-                            .onTapGesture { Task { await choose(p) } }
+            List {
+                if vm.loading {
+                    ProgressView()
+                        .frame(maxWidth: .infinity, alignment: .center)
+                }
+
+                ForEach(vm.results) { p in
+                    VStack(alignment: .leading) {
+                        HStack {
+                            Text(p.name)
+                            if let g = p.nutriScore {
+                                Text(g.uppercased())
+                                    .font(.caption2)
+                                    .padding(4)
+                                    .background(Color.gray.opacity(0.2))
+                                    .clipShape(Circle())
+                            }
+                        }
+                        if let kcal = p.kcalPer100g {
+                            Text("\(Int(kcal)) kcal / 100 g")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
                     }
-                    if !vm.loading && vm.results.isEmpty && vm.query.trimmingCharacters(in: .whitespaces).count >= 2 {
-                        Text("No matches").foregroundStyle(.secondary)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        Task { await choose(p) }
                     }
+                }
+
+                if !vm.loading && vm.results.isEmpty && vm.query.count >= 3 {
+                    Text("No matches")
+                        .foregroundStyle(.secondary)
                 }
             }
             .navigationTitle("Search food")
             .searchable(text: $vm.query, prompt: "Start typing…")
-            .onChange(of: vm.query) { newValue in
-                searchTask?.cancel()
-                searchTask = Task {
-                    do { try await Task.sleep(nanoseconds: 250_000_000) } catch { return }
-                    await vm.performSearch()
-                }
+            // ✅ iOS 17 syntax — no newValue parameter
+            .onChange(of: vm.query) {
+                Task { await vm.performSearch(using: env) }
             }
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Close", role: .cancel) { dismiss() } }
-                ToolbarItem(placement: .primaryAction) {
-                    Button("Use Location") { vm.askLocation() }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Close", role: .cancel) { dismiss() }
                 }
-            }
-            .task {
-                vm.askLocation()
-                await vm.refreshGeoContext()
             }
         }
     }
 
     private func choose(_ lite: ProductLite) async {
-        if let p = try? await env.search.product(code: lite.barcode) {
-            pick(p); dismiss()
+        do {
+            let p = try await env.search.product(code: lite.barcode)
+            pick(p)
+            dismiss()
+        } catch {
+            print("❌ Failed to fetch product detail: \(error)")
         }
     }
 }
+

@@ -1,46 +1,53 @@
 import Foundation
+import SwiftUI
 import CoreLocation
 
 @MainActor
 final class SearchViewModel: ObservableObject {
-    @Published var query = ""
+    @Published var query: String = ""
     @Published var results: [ProductLite] = []
-    @Published var loading = false
-    @Published var stores: [Store] = []
+    @Published var loading: Bool = false
+    @Published var nearbyStores: [Store] = []
     @Published var countryHint: String?
 
-    private let search: SearchService
-    private let location: LocationProvider
-    private let ranker: SearchRanker
+    private var searchTask: Task<Void, Never>? = nil
 
-    init(search: SearchService, location: LocationProvider, ranker: SearchRanker = .live) {
-        self.search = search
-        self.location = location
-        self.ranker = ranker
-    }
+    // Run the search with injected environment
+    func performSearch(using env: AppEnvironment) async {
+        // Cancel any ongoing search task (debounce)
+        searchTask?.cancel()
 
-    func askLocation() {
-        if location.authorization == .notDetermined {
-            location.requestWhenInUse()
+        searchTask = Task { [weak self] in
+            guard let self else { return }
+
+            let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard trimmed.count >= 3 else {
+                self.results = []
+                return
+            }
+
+            self.loading = true
+            defer { self.loading = false }
+
+            do {
+                // Get top 3 store slugs from nearby stores
+                let slugs = Array(self.nearbyStores.prefix(3)).map { offStoreSlug($0.name) }
+
+                // Fetch base results from API
+                let base = try await env.search.search(
+                    query: trimmed,
+                    country: countryHint,
+                    nearbyStoreSlugs: slugs
+                )
+
+                // Rank them by store + query relevance
+                self.results = SearchRanker.live.rank(base, query: trimmed, nearbyStores: self.nearbyStores)
+
+            } catch {
+                print("❌ Search error: \(error.localizedDescription)")
+                self.results = []
+            }
         }
-    }
-
-    func refreshGeoContext() async {
-        guard let here = location.location else { return }
-        let nearby = await NearbyStoresService.find(around: here)
-        self.stores = nearby
-        if let country = await reverseGeocodeCountry(from: here) {
-            self.countryHint = country
-        }
-    }
-
-    func performSearch() async {
-        let q = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        if q.isEmpty { results = []; return }
-        loading = true; defer { loading = false }
-
-        let slugs = Array(stores.prefix(3)).map { offStoreSlug($0.name) }
-        let base = (try? await search.search(query: q, country: countryHint, nearbyStoreSlugs: slugs)) ?? []
-        results = stores.isEmpty ? base : ranker.rank(base, query: q, nearbyStores: stores)
     }
 }
+

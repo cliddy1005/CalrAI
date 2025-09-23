@@ -1,5 +1,6 @@
 import Foundation
 import CoreLocation
+import SwiftUI
 
 // Dependency container (very small on purpose)
 struct AppEnvironment {
