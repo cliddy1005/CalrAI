@@ -4,6 +4,7 @@ struct DiaryView: View {
     @Environment(\.appEnvironment) private var env
     @StateObject private var vm = DiaryViewModel()
     @State private var editing: FoodEntry?
+    @State private var showingManualSheet = false
 
     var body: some View {
         NavigationStack {
@@ -12,6 +13,30 @@ struct DiaryView: View {
                 MacroStrip(goals: vm.macroGoals)
 
                 List {
+                    Section(header: Text("Manual Calories")) {
+                        ForEach(vm.manualEntries) { entry in
+                            HStack {
+                                Text(entry.meal.title)
+                                    .font(.caption2)
+                                    .foregroundColor(.accentColor)
+                                    .frame(width: 70, alignment: .leading)
+                                Text("\(entry.calories) kcal")
+                                if let note = entry.note, !note.isEmpty {
+                                    Text(note).font(.caption).foregroundColor(.secondary)
+                                }
+                            }
+                        }
+                        .onDelete { offsets in withAnimation { vm.deleteManualEntry(at: offsets) } }
+
+                        Button {
+                            showingManualSheet = true
+                        } label: {
+                            HStack {
+                                Image(systemName: "plus.circle")
+                                Text("Add Calories Manually")
+                            }
+                        }
+                    }
                     ForEach(DiaryViewModel.Meal.allCases) { meal in
                         Section(header: Text(meal.title)) {
                             ForEach(vm.entriesFor(meal)) { e in
@@ -51,6 +76,12 @@ struct DiaryView: View {
             .sheet(isPresented: $vm.showSearch)   { SearchView { p in if let m = vm.activeMeal { vm.append(p, to: m) } } }
             .sheet(isPresented: $vm.showSettings) { SettingsView(profile: vm.profile) { vm.profile = $0 } }
             .sheet(item: $editing) { e in EditSheet(entry: e) { g in vm.update(id: e.id, grams: g) } }
+            .sheet(isPresented: $showingManualSheet) {
+                ManualCalorieSheet { kcal, note, meal in
+                    vm.addManualEntry(calories: kcal, note: note, meal: meal)
+                    showingManualSheet = false
+                }
+            }
             .alert("Error",
                    isPresented: Binding(get: { vm.errorMessage != nil },
                                         set: { _ in vm.errorMessage = nil })) {
@@ -133,3 +164,46 @@ private struct ActionRow: View {
         }
     }
 }
+private struct ManualCalorieSheet: View {
+    @State private var kcalText = ""
+    @State private var noteText = ""
+    @State private var selectedMeal: DiaryViewModel.Meal = .breakfast
+    var onSave: (Int, String?, DiaryViewModel.Meal) -> Void
+    @Environment(\.dismiss) private var dismiss
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section(header: Text("Meal")) {
+                    Picker("Meal", selection: $selectedMeal) {
+                        ForEach(DiaryViewModel.Meal.allCases) { meal in
+                            Text(meal.title).tag(meal)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
+                Section(header: Text("Calories")) {
+                    TextField("e.g. 250", text: $kcalText)
+                        .keyboardType(.numberPad)
+                }
+                Section(header: Text("Note (optional)")) {
+                    TextField("Snack, drink, etc.", text: $noteText)
+                }
+            }
+            .navigationTitle("Manual Entry")
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        if let kcal = Int(kcalText.trimmingCharacters(in: .whitespaces)), kcal > 0 {
+                            onSave(kcal, noteText.isEmpty ? nil : noteText, selectedMeal)
+                            dismiss()
+                        }
+                    }.disabled(Int(kcalText.trimmingCharacters(in: .whitespaces)) == nil)
+                }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel", role: .cancel) { dismiss() }
+                }
+            }
+        }
+    }
+}
+

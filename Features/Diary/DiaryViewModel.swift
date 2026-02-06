@@ -1,6 +1,13 @@
 import Foundation
 import SwiftUI
 
+struct ManualCalorieEntry: Identifiable, Hashable {
+    let id = UUID()
+    let calories: Int
+    let note: String?
+    let meal: DiaryViewModel.Meal
+}
+
 @MainActor
 final class DiaryViewModel: ObservableObject {
     enum Meal: String, CaseIterable, Identifiable, Codable { case breakfast, lunch, dinner, snacks; var id: Self { self }; var title: String { rawValue.capitalized } }
@@ -18,6 +25,7 @@ final class DiaryViewModel: ObservableObject {
     @Published var showSettings = false
     @Published var errorMessage: String?
     @Published var exerciseKcal = 0
+    @Published var manualEntries: [ManualCalorieEntry] = []
 
     func append(_ p: Product, to meal: Meal) {
         entries.append(.init(product: p, grams: p.servingSizeGrams ?? 100, meal: meal))
@@ -32,7 +40,11 @@ final class DiaryViewModel: ObservableObject {
     }
     func entriesFor(_ meal: Meal) -> [FoodEntry] { entries.filter { $0.meal == meal } }
 
-    var totalKcal: Int { entries.reduce(0) { $0 + Int($1.calories) } }
+    var totalKcal: Int {
+        let mealKcal = entries.reduce(0) { $0 + Int($1.calories) }
+        let manualKcal = manualEntries.reduce(0) { $0 + $1.calories }
+        return mealKcal + manualKcal
+    }
     var totals: (p: Double, c: Double, f: Double) {
         entries.reduce(into: (0,0,0)) { acc, e in acc.0 += e.protein; acc.1 += e.carbs; acc.2 += e.fat }
     }
@@ -53,5 +65,12 @@ final class DiaryViewModel: ObservableObject {
             .init(kind: .fat,     eaten: totals.f, target: t.f),
             .init(kind: .protein, eaten: totals.p, target: t.p)
         ]
+    }
+
+    func addManualEntry(calories: Int, note: String? = nil, meal: Meal) {
+        manualEntries.append(ManualCalorieEntry(calories: calories, note: note, meal: meal))
+    }
+    func deleteManualEntry(at offsets: IndexSet) {
+        manualEntries.remove(atOffsets: offsets)
     }
 }
