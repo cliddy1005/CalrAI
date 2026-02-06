@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#E8F5E9"/>
+      <stop offset="100%" style="stop-color:#C8E6C9"/>
+    </linearGradient>
+  </defs>
+  <!-- Background rounded rect -->
+  <rect width="1024" height="1024" rx="224" ry="224" fill="url(#bg)"/>
+  <!-- Stylized C letter -->
+  <path d="M580 280c-140 0-260 105-260 232s120 232 260 232c50 0 96-14 134-38"
+        fill="none" stroke="#2D9B4E" stroke-width="64" stroke-linecap="round"/>
+  <!-- Leaf shape emerging from top of C -->
+  <path d="M650 260 Q720 180 780 200 Q800 260 740 320 Q700 280 650 260Z"
+        fill="#2D9B4E" opacity="0.9"/>
+  <!-- Leaf vein -->
+  <line x1="715" y1="210" x2="690" y2="295" stroke="#E8F5E9" stroke-width="4" stroke-linecap="round"/>
+  <!-- Circuit dots -->
+  <circle cx="780" cy="200" r="12" fill="#2D9B4E" opacity="0.7"/>
+  <circle cx="810" cy="240" r="8" fill="#2D9B4E" opacity="0.5"/>
+  <circle cx="830" cy="200" r="6" fill="#2D9B4E" opacity="0.4"/>
+  <!-- Connecting lines between dots -->
+  <line x1="780" y1="200" x2="810" y2="240" stroke="#2D9B4E" stroke-width="3" opacity="0.4"/>
+  <line x1="810" y1="240" x2="830" y2="200" stroke="#2D9B4E" stroke-width="2" opacity="0.3"/>
+  <!-- Fork tines (subtle, bottom right) -->
+  <g transform="translate(720, 520) rotate(15)" opacity="0.15">
+    <line x1="0" y1="0" x2="0" y2="160" stroke="#2D9B4E" stroke-width="12" stroke-linecap="round"/>
+    <line x1="-24" y1="0" x2="-24" y2="60" stroke="#2D9B4E" stroke-width="12" stroke-linecap="round"/>
+    <line x1="24" y1="0" x2="24" y2="60" stroke="#2D9B4E" stroke-width="12" stroke-linecap="round"/>
+  </g>
+</svg>

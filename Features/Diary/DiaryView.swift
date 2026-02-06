@@ -5,6 +5,8 @@ struct DiaryView: View {
     @StateObject private var vm = DiaryViewModel()
     @State private var editing: FoodEntry?
     @State private var showingManualSheet = false
+    @State private var showCustomFood = false
+    @State private var scannedBarcode: String?
 
     var body: some View {
         NavigationStack {
@@ -60,6 +62,9 @@ struct DiaryView: View {
             }
             .navigationTitle("Today \(vm.totalKcal) kcal")
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button { vm.showHistory = true } label: { Image(systemName: "calendar") }
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button { vm.showSettings = true } label: { Image(systemName: "gearshape") }
                 }
@@ -67,15 +72,27 @@ struct DiaryView: View {
             .sheet(isPresented: $vm.showScanner)  {
                 ScannerSheet { code in
                     Task {
-                        do { let p = try await env.search.product(code: code)
+                        do {
+                            let p = try await env.foodRepository.lookupBarcode(code)
                             if let m = vm.activeMeal { vm.append(p, to: m) }
-                        } catch { vm.errorMessage = error.localizedDescription }
+                        } catch is FoodLookupError {
+                            scannedBarcode = code
+                            showCustomFood = true
+                        } catch {
+                            vm.errorMessage = error.localizedDescription
+                        }
                     }
                 }
             }
             .sheet(isPresented: $vm.showSearch)   { SearchView { p in if let m = vm.activeMeal { vm.append(p, to: m) } } }
             .sheet(isPresented: $vm.showSettings) { SettingsView(profile: vm.profile) { vm.profile = $0 } }
             .sheet(item: $editing) { e in EditSheet(entry: e) { g in vm.update(id: e.id, grams: g) } }
+            .sheet(isPresented: $vm.showHistory)  { HistoryView() }
+            .sheet(isPresented: $showCustomFood)  {
+                CustomFoodView(barcode: scannedBarcode) { product in
+                    if let m = vm.activeMeal { vm.append(product, to: m) }
+                }
+            }
             .sheet(isPresented: $showingManualSheet) {
                 ManualCalorieSheet { kcal, note, meal in
                     vm.addManualEntry(calories: kcal, note: note, meal: meal)
@@ -87,6 +104,11 @@ struct DiaryView: View {
                                         set: { _ in vm.errorMessage = nil })) {
                 Button("OK", role: .cancel) { }
             } message: { Text(vm.errorMessage ?? "") }
+            .onAppear {
+                if vm.localStore == nil {
+                    vm.restoreFromPersistence(store: env.localStore)
+                }
+            }
         }
     }
 }
@@ -206,4 +228,3 @@ private struct ManualCalorieSheet: View {
         }
     }
 }
-

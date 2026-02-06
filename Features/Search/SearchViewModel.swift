@@ -12,7 +12,7 @@ final class SearchViewModel: ObservableObject {
 
     private var searchTask: Task<Void, Never>? = nil
 
-    // Run the search with injected environment
+    // Run the search with injected environment — uses CachedFoodRepository for offline support
     func performSearch(using env: AppEnvironment) async {
         // Cancel any ongoing search task (debounce)
         searchTask?.cancel()
@@ -33,8 +33,8 @@ final class SearchViewModel: ObservableObject {
                 // Get top 3 store slugs from nearby stores
                 let slugs = Array(self.nearbyStores.prefix(3)).map { offStoreSlug($0.name) }
 
-                // Fetch base results from API
-                let base = try await env.search.search(
+                // Use the cached food repository (local + remote merged)
+                let base = try await env.foodRepository.searchFoods(
                     query: trimmed,
                     country: countryHint,
                     nearbyStoreSlugs: slugs
@@ -44,10 +44,9 @@ final class SearchViewModel: ObservableObject {
                 self.results = SearchRanker.live.rank(base, query: trimmed, nearbyStores: self.nearbyStores)
 
             } catch {
-                print("❌ Search error: \(error.localizedDescription)")
+                print("Search error: \(error.localizedDescription)")
                 self.results = []
             }
         }
     }
 }
-

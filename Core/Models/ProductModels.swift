@@ -44,6 +44,20 @@ struct Product: Decodable, Hashable {
         }
         return nil
     }
+
+    /// Memberwise initializer for building from cached data.
+    init(barcode: String, name: String, kcalPer100g: Double,
+         proteinPer100g: Double?, fatPer100g: Double?, carbPer100g: Double?,
+         servingSizeGrams: Double?, nutriScore: String?) {
+        self.barcode = barcode
+        self.name = name
+        self.kcalPer100g = kcalPer100g
+        self.proteinPer100g = proteinPer100g
+        self.fatPer100g = fatPer100g
+        self.carbPer100g = carbPer100g
+        self.servingSizeGrams = servingSizeGrams
+        self.nutriScore = nutriScore
+    }
 }
 
 struct ProductLite: Decodable, Identifiable {
