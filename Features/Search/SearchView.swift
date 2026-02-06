@@ -61,11 +61,11 @@ struct SearchView: View {
 
     private func choose(_ lite: ProductLite) async {
         do {
-            let p = try await env.search.product(code: lite.barcode)
+            let p = try await env.foodRepository.lookupBarcode(lite.barcode)
             pick(p)
             dismiss()
         } catch {
-            print("❌ Failed to fetch product detail: \(error)")
+            print("Failed to fetch product detail: \(error)")
         }
     }
 }

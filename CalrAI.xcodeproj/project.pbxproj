@@ -33,6 +33,19 @@
 		108D75642F340E4B00A51AAC /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 108D75632F340E4B00A51AAC /* WidgetKit.framework */; };
 		108D75662F340E4B00A51AAC /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 108D75652F340E4B00A51AAC /* SwiftUI.framework */; };
 		108D75772F340E4E00A51AAC /* CalrAIMacrosWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 108D75612F340E4B00A51AAC /* CalrAIMacrosWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		CC0001012F40000100000001 /* CachedFood.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000012F40000100000001 /* CachedFood.swift */; };
+		CC0001022F40000100000002 /* DiaryEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000022F40000100000002 /* DiaryEntry.swift */; };
+		CC0001032F40000100000003 /* FoodRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000032F40000100000003 /* FoodRepository.swift */; };
+		CC0001042F40000100000004 /* LocalFoodStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000042F40000100000004 /* LocalFoodStore.swift */; };
+		CC0001052F40000100000005 /* CachedFoodRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000052F40000100000005 /* CachedFoodRepository.swift */; };
+		CC0001062F40000100000006 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000062F40000100000006 /* KeychainService.swift */; };
+		CC0001072F40000100000007 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000072F40000100000007 /* AuthManager.swift */; };
+		CC0001082F40000100000008 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000082F40000100000008 /* LoginView.swift */; };
+		CC0001092F40000100000009 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000092F40000100000009 /* RootView.swift */; };
+		CC00010A2F4000010000000A /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC00000A2F4000010000000A /* HistoryView.swift */; };
+		CC00010B2F4000010000000B /* CustomFoodView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC00000B2F4000010000000B /* CustomFoodView.swift */; };
+		CC00010C2F4000010000000C /* FoodCacheTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC00000C2F4000010000000C /* FoodCacheTests.swift */; };
+		CC00010D2F4000010000000D /* DiaryPersistenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC00000D2F4000010000000D /* DiaryPersistenceTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -104,6 +117,19 @@
 		108D75612F340E4B00A51AAC /* CalrAIMacrosWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CalrAIMacrosWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		108D75632F340E4B00A51AAC /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		108D75652F340E4B00A51AAC /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		CC0000012F40000100000001 /* CachedFood.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachedFood.swift; sourceTree = "<group>"; };
+		CC0000022F40000100000002 /* DiaryEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryEntry.swift; sourceTree = "<group>"; };
+		CC0000032F40000100000003 /* FoodRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodRepository.swift; sourceTree = "<group>"; };
+		CC0000042F40000100000004 /* LocalFoodStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalFoodStore.swift; sourceTree = "<group>"; };
+		CC0000052F40000100000005 /* CachedFoodRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachedFoodRepository.swift; sourceTree = "<group>"; };
+		CC0000062F40000100000006 /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
+		CC0000072F40000100000007 /* AuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManager.swift; sourceTree = "<group>"; };
+		CC0000082F40000100000008 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		CC0000092F40000100000009 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		CC00000A2F4000010000000A /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
+		CC00000B2F4000010000000B /* CustomFoodView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomFoodView.swift; sourceTree = "<group>"; };
+		CC00000C2F4000010000000C /* FoodCacheTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodCacheTests.swift; sourceTree = "<group>"; };
+		CC00000D2F4000010000000D /* DiaryPersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryPersistenceTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -178,6 +204,8 @@
 		101474DF2E83545A0046DD0F /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				CC0000012F40000100000001 /* CachedFood.swift */,
+				CC0000022F40000100000002 /* DiaryEntry.swift */,
 				101474DC2E83545A0046DD0F /* FoodEntry.swift */,
 				101474DD2E83545A0046DD0F /* ProductModels.swift */,
 				101474DE2E83545A0046DD0F /* UserProfile.swift */,
@@ -188,6 +216,11 @@
 		101474E42E83545A0046DD0F /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				CC0000072F40000100000007 /* AuthManager.swift */,
+				CC0000052F40000100000005 /* CachedFoodRepository.swift */,
+				CC0000032F40000100000003 /* FoodRepository.swift */,
+				CC0000062F40000100000006 /* KeychainService.swift */,
+				CC0000042F40000100000004 /* LocalFoodStore.swift */,
 				101474E02E83545A0046DD0F /* LocationService.swift */,
 				101474E12E83545A0046DD0F /* NearbyStoresService.swift */,
 				101474E22E83545A0046DD0F /* OFFSearchService.swift */,
@@ -238,6 +271,7 @@
 		101474FC2E8354670046DD0F /* Search */ = {
 			isa = PBXGroup;
 			children = (
+				CC00000B2F4000010000000B /* CustomFoodView.swift */,
 				101474F82E8354670046DD0F /* ProductRow.swift */,
 				101474F92E8354670046DD0F /* SearchView.swift */,
 				101474FA2E8354670046DD0F /* SearchViewModel.swift */,
@@ -254,10 +288,29 @@
 			path = Settings;
 			sourceTree = "<group>";
 		};
+		CC0002012F40000100000021 /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				CC0000082F40000100000008 /* LoginView.swift */,
+				CC0000092F40000100000009 /* RootView.swift */,
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
+		CC0002022F40000100000022 /* History */ = {
+			isa = PBXGroup;
+			children = (
+				CC00000A2F4000010000000A /* HistoryView.swift */,
+			);
+			path = History;
+			sourceTree = "<group>";
+		};
 		101474FF2E8354670046DD0F /* Features */ = {
 			isa = PBXGroup;
 			children = (
+				CC0002012F40000100000021 /* Auth */,
 				101474F52E8354670046DD0F /* Diary */,
+				CC0002022F40000100000022 /* History */,
 				101474F72E8354670046DD0F /* Scanner */,
 				101474FC2E8354670046DD0F /* Search */,
 				101474FE2E8354670046DD0F /* Settings */,
@@ -281,6 +334,15 @@
 			path = "Preview Content";
 			sourceTree = "<group>";
 		};
+		CC0002032F40000100000023 /* CalrAITests */ = {
+			isa = PBXGroup;
+			children = (
+				CC00000C2F4000010000000C /* FoodCacheTests.swift */,
+				CC00000D2F4000010000000D /* DiaryPersistenceTests.swift */,
+			);
+			path = CalrAITests;
+			sourceTree = "<group>";
+		};
 		1054E6642E3AC530006FBACF = {
 			isa = PBXGroup;
 			children = (
@@ -290,6 +352,7 @@
 				101474FF2E8354670046DD0F /* Features */,
 				101474E82E83545A0046DD0F /* Core */,
 				101474D92E8354480046DD0F /* App */,
+				CC0002032F40000100000023 /* CalrAITests */,
 				108D75672F340E4B00A51AAC /* CalrAIMacrosWidget */,
 				108D75622F340E4B00A51AAC /* Frameworks */,
 				1054E66E2E3AC530006FBACF /* Products */,
@@ -512,6 +575,17 @@
 				101474F12E83545A0046DD0F /* FoodEntry.swift in Sources */,
 				101474DA2E8354480046DD0F /* CalrAIApp.swift in Sources */,
 				101474DB2E8354480046DD0F /* AppEnvironment.swift in Sources */,
+				CC0001012F40000100000001 /* CachedFood.swift in Sources */,
+				CC0001022F40000100000002 /* DiaryEntry.swift in Sources */,
+				CC0001032F40000100000003 /* FoodRepository.swift in Sources */,
+				CC0001042F40000100000004 /* LocalFoodStore.swift in Sources */,
+				CC0001052F40000100000005 /* CachedFoodRepository.swift in Sources */,
+				CC0001062F40000100000006 /* KeychainService.swift in Sources */,
+				CC0001072F40000100000007 /* AuthManager.swift in Sources */,
+				CC0001082F40000100000008 /* LoginView.swift in Sources */,
+				CC0001092F40000100000009 /* RootView.swift in Sources */,
+				CC00010A2F4000010000000A /* HistoryView.swift in Sources */,
+				CC00010B2F4000010000000B /* CustomFoodView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -519,6 +593,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CC00010C2F4000010000000C /* FoodCacheTests.swift in Sources */,
+				CC00010D2F4000010000000D /* DiaryPersistenceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

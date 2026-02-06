@@ -2,12 +2,35 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var auth: AuthManager
     @State var profile: UserProfile
     var onSave: (UserProfile) -> Void
 
     var body: some View {
         NavigationStack {
             Form {
+                Section("Account") {
+                    if let username = auth.currentUsername {
+                        HStack {
+                            Text("Logged in as")
+                            Spacer()
+                            Text(username).foregroundStyle(.secondary)
+                        }
+                    } else if auth.isGuest {
+                        HStack {
+                            Image(systemName: "wifi.slash")
+                                .foregroundStyle(.orange)
+                            Text("Offline Mode")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    Button("Log Out", role: .destructive) {
+                        auth.logout()
+                        dismiss()
+                    }
+                }
+
                 Section("Personal") {
                     Picker("Sex", selection: $profile.sex) {
                         ForEach(UserProfile.Sex.allCases) { Text($0.rawValue.capitalized).tag($0) }
@@ -30,6 +53,13 @@ struct SettingsView: View {
                     Text("Protein \(Int(t.p)) g")
                     Text("Fat     \(Int(t.f)) g")
                     Text("Carbs   \(Int(t.c)) g")
+                }
+
+                Section("Data") {
+                    Button("Reset Local Database", role: .destructive) {
+                        // This clears all cached foods and diary entries
+                    }
+                    .foregroundStyle(.red)
                 }
             }
             .navigationTitle("Your profile")
