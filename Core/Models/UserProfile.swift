@@ -6,11 +6,20 @@ struct UserProfile: Codable {
         case sedentary, light, moderate, active, veryActive
         var factor: Double {
             switch self {
-            case .sedentary:   return 1.2
-            case .light:       return 1.375
-            case .moderate:    return 1.55
-            case .active:      return 1.725
-            case .veryActive:  return 1.9
+            case .sedentary:  return 1.2
+            case .light:      return 1.375
+            case .moderate:   return 1.55
+            case .active:     return 1.725
+            case .veryActive: return 1.9
+            }
+        }
+        var displayName: String {
+            switch self {
+            case .sedentary:  "Sedentary"
+            case .light:      "Light"
+            case .moderate:   "Moderate"
+            case .active:     "Active"
+            case .veryActive: "Very Active"
             }
         }
         var id: Self { self }

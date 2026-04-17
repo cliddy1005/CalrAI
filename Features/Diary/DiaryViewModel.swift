@@ -104,28 +104,33 @@ final class DiaryViewModel: ObservableObject {
         ]
     }
 
+    func manualEntriesFor(_ meal: Meal) -> [ManualCalorieEntry] {
+        manualEntries.filter { $0.meal == meal }
+    }
+
     func addManualEntry(calories: Int, note: String? = nil, meal: Meal) {
         manualEntries.append(ManualCalorieEntry(calories: calories, note: note, meal: meal))
-        // Persist manual entry
         if let store = localStore {
             let entry = DiaryEntry.manual(calories: calories, note: note, meal: meal.rawValue)
             store.insertEntry(entry)
         }
     }
-    func deleteManualEntry(at offsets: IndexSet) {
-        let idsToRemove = offsets.map { manualEntries[$0].id }
-        // Remove from persistence
+
+    func deleteManualEntry(at offsets: IndexSet, in meal: Meal) {
+        let slice = manualEntries.filter { $0.meal == meal }
+        let idsToRemove = offsets.map { slice[$0].id }
         if let store = localStore {
             let today = store.fetchEntries(for: Date())
             for id in idsToRemove {
-                if let manual = manualEntries.first(where: { $0.id == id }) {
-                    if let persisted = today.first(where: { $0.isManual && $0.caloriesSnapshot == manual.calories }) {
-                        store.deleteEntry(persisted)
-                    }
+                if let manual = manualEntries.first(where: { $0.id == id }),
+                   let persisted = today.first(where: {
+                       $0.isManual && $0.caloriesSnapshot == manual.calories && $0.mealType == meal.rawValue
+                   }) {
+                    store.deleteEntry(persisted)
                 }
             }
         }
-        manualEntries.remove(atOffsets: offsets)
+        manualEntries.removeAll { idsToRemove.contains($0.id) }
     }
 
     /// Restore today's entries from persistence on app launch.
