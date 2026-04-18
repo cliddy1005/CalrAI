@@ -28,8 +28,7 @@
 		101475072E8354670046DD0F /* SearchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101474FA2E8354670046DD0F /* SearchViewModel.swift */; };
 		101475082E8354670046DD0F /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101474F92E8354670046DD0F /* SearchView.swift */; };
 		101475152E835F200046DD0F /* MacroRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101475142E835F1A0046DD0F /* MacroRing.swift */; };
-		102AF5C72F203AFE002F2912 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1014750F2E8357730046DD0F /* Preview Assets.xcassets */; };
-		108D755C2F340CD100A51AAC /* MacroSummaryWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 108D755B2F340CD100A51AAC /* MacroSummaryWidget.swift */; };
+		108D755C2F340CD100A51AAC /* MacroSummaryWidget.swift in Sources (Widget) */ = {isa = PBXBuildFile; fileRef = 108D755B2F340CD100A51AAC /* MacroSummaryWidget.swift */; };
 		108D75642F340E4B00A51AAC /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 108D75632F340E4B00A51AAC /* WidgetKit.framework */; };
 		108D75662F340E4B00A51AAC /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 108D75652F340E4B00A51AAC /* SwiftUI.framework */; };
 		108D75772F340E4E00A51AAC /* CalrAIMacrosWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 108D75612F340E4B00A51AAC /* CalrAIMacrosWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -107,7 +106,7 @@
 		101474FA2E8354670046DD0F /* SearchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchViewModel.swift; sourceTree = "<group>"; };
 		101474FB2E8354670046DD0F /* ShopsStrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopsStrip.swift; sourceTree = "<group>"; };
 		101474FD2E8354670046DD0F /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		1014750F2E8357730046DD0F /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		1014750F2E8357730046DD0F /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		101475102E835A560046DD0F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		101475142E835F1A0046DD0F /* MacroRing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacroRing.swift; sourceTree = "<group>"; };
 		1054E66D2E3AC530006FBACF /* CalrAI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CalrAI.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -521,7 +520,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				102AF5C72F203AFE002F2912 /* Preview Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -556,7 +554,6 @@
 				101474E92E83545A0046DD0F /* UserProfile.swift in Sources */,
 				101474EA2E83545A0046DD0F /* SearchService.swift in Sources */,
 				101474EB2E83545A0046DD0F /* OFFSearchService.swift in Sources */,
-				108D755C2F340CD100A51AAC /* MacroSummaryWidget.swift in Sources */,
 				101475002E8354670046DD0F /* ProductRow.swift in Sources */,
 				101475012E8354670046DD0F /* SettingsView.swift in Sources */,
 				101475022E8354670046DD0F /* DiaryView.swift in Sources */,
