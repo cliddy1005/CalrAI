@@ -3,6 +3,7 @@ import SwiftUI
 /// History view showing diary entries by date with a calendar picker and stats summary.
 struct HistoryView: View {
     @Environment(\.appEnvironment) private var env
+    @Environment(\.dismiss) private var dismiss
     @State private var selectedDate = Date()
     @State private var entries: [DiaryEntry] = []
     @State private var weeklyStats: WeeklyStats?
@@ -10,10 +11,14 @@ struct HistoryView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // Date picker
-                DatePicker("Select date", selection: $selectedDate, displayedComponents: .date)
-                    .datePickerStyle(.graphical)
-                    .padding(.horizontal)
+                HStack {
+                    DatePicker("Date", selection: $selectedDate, in: ...Date(), displayedComponents: .date)
+                        .datePickerStyle(.compact)
+                        .labelsHidden()
+                    Spacer()
+                }
+                .padding(.horizontal)
+                .padding(.vertical, 8)
 
                 if let stats = weeklyStats {
                     WeeklyStatsBar(stats: stats)
@@ -45,6 +50,11 @@ struct HistoryView: View {
                 }
             }
             .navigationTitle("History")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") { dismiss() }
+                }
+            }
             .onChange(of: selectedDate) {
                 loadEntries()
                 loadWeeklyStats()

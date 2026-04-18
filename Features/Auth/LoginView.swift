@@ -48,7 +48,10 @@ struct LoginView: View {
                     .buttonStyle(.borderedProminent)
                     .disabled(username.isEmpty || pin.isEmpty)
                 }
-                .padding(.horizontal, 32)
+                .padding(20)
+                .background(Color(.secondarySystemBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .padding(.horizontal, 24)
 
                 // Secondary actions
                 VStack(spacing: 8) {

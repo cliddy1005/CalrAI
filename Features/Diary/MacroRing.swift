@@ -56,10 +56,3 @@ struct MacroRing: View {
         }
     }
 }
-//
-//  MacroRing.swift
-//  CalrAI
-//
-//  Created by Ciaran Liddy on 24/09/2025.
-//
-

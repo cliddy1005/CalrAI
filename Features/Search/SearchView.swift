@@ -63,10 +63,19 @@ struct SearchView: View {
         do {
             let p = try await env.foodRepository.lookupBarcode(lite.barcode)
             pick(p)
-            dismiss()
         } catch {
-            print("Failed to fetch product detail: \(error)")
+            pick(Product(
+                barcode: lite.barcode,
+                name: lite.name,
+                kcalPer100g: lite.kcalPer100g ?? 0,
+                proteinPer100g: nil,
+                fatPer100g: nil,
+                carbPer100g: nil,
+                servingSizeGrams: nil,
+                nutriScore: lite.nutriScore
+            ))
         }
+        dismiss()
     }
 }
 
