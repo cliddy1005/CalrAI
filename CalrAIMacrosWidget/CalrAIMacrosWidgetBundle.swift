@@ -11,8 +11,6 @@ import SwiftUI
 @main
 struct CalrAIMacrosWidgetBundle: WidgetBundle {
     var body: some Widget {
-        CalrAIMacrosWidget()
-        CalrAIMacrosWidgetControl()
-        CalrAIMacrosWidgetLiveActivity()
+        MacroSummaryWidget()
     }
 }

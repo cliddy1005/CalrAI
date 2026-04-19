@@ -28,8 +28,7 @@
 		101475072E8354670046DD0F /* SearchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101474FA2E8354670046DD0F /* SearchViewModel.swift */; };
 		101475082E8354670046DD0F /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101474F92E8354670046DD0F /* SearchView.swift */; };
 		101475152E835F200046DD0F /* MacroRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101475142E835F1A0046DD0F /* MacroRing.swift */; };
-		102AF5C72F203AFE002F2912 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1014750F2E8357730046DD0F /* Preview Assets.xcassets */; };
-		108D755C2F340CD100A51AAC /* MacroSummaryWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 108D755B2F340CD100A51AAC /* MacroSummaryWidget.swift */; };
+		102AF5C82F203AFE002F2912 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 102AF5C62F197F3A002F2912 /* Assets.xcassets */; };
 		108D75642F340E4B00A51AAC /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 108D75632F340E4B00A51AAC /* WidgetKit.framework */; };
 		108D75662F340E4B00A51AAC /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 108D75652F340E4B00A51AAC /* SwiftUI.framework */; };
 		108D75772F340E4E00A51AAC /* CalrAIMacrosWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 108D75612F340E4B00A51AAC /* CalrAIMacrosWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -107,13 +106,12 @@
 		101474FA2E8354670046DD0F /* SearchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchViewModel.swift; sourceTree = "<group>"; };
 		101474FB2E8354670046DD0F /* ShopsStrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopsStrip.swift; sourceTree = "<group>"; };
 		101474FD2E8354670046DD0F /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		1014750F2E8357730046DD0F /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		101475102E835A560046DD0F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		101475142E835F1A0046DD0F /* MacroRing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacroRing.swift; sourceTree = "<group>"; };
+		102AF5C62F197F3A002F2912 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1054E66D2E3AC530006FBACF /* CalrAI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CalrAI.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1054E6812E3AC532006FBACF /* CalrAITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CalrAITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1054E68B2E3AC532006FBACF /* CalrAIUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CalrAIUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		108D755B2F340CD100A51AAC /* MacroSummaryWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacroSummaryWidget.swift; sourceTree = "<group>"; };
 		108D75612F340E4B00A51AAC /* CalrAIMacrosWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CalrAIMacrosWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		108D75632F340E4B00A51AAC /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		108D75652F340E4B00A51AAC /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
@@ -143,11 +141,6 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		102AF5C62F197F3A002F2912 /* Assets.xcassets */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = Assets.xcassets;
-			sourceTree = "<group>";
-		};
 		108D75672F340E4B00A51AAC /* CalrAIMacrosWidget */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -255,7 +248,6 @@
 				101475142E835F1A0046DD0F /* MacroRing.swift */,
 				101474F32E8354670046DD0F /* DiaryViewModel.swift */,
 				101474F42E8354670046DD0F /* EditSheet.swift */,
-				108D755B2F340CD100A51AAC /* MacroSummaryWidget.swift */,
 			);
 			path = Diary;
 			sourceTree = "<group>";
@@ -288,23 +280,6 @@
 			path = Settings;
 			sourceTree = "<group>";
 		};
-		CC0002012F40000100000021 /* Auth */ = {
-			isa = PBXGroup;
-			children = (
-				CC0000082F40000100000008 /* LoginView.swift */,
-				CC0000092F40000100000009 /* RootView.swift */,
-			);
-			path = Auth;
-			sourceTree = "<group>";
-		};
-		CC0002022F40000100000022 /* History */ = {
-			isa = PBXGroup;
-			children = (
-				CC00000A2F4000010000000A /* HistoryView.swift */,
-			);
-			path = History;
-			sourceTree = "<group>";
-		};
 		101474FF2E8354670046DD0F /* Features */ = {
 			isa = PBXGroup;
 			children = (
@@ -326,28 +301,10 @@
 			path = Resources;
 			sourceTree = "<group>";
 		};
-		1014750E2E8357320046DD0F /* Preview Content */ = {
-			isa = PBXGroup;
-			children = (
-				1014750F2E8357730046DD0F /* Preview Assets.xcassets */,
-			);
-			path = "Preview Content";
-			sourceTree = "<group>";
-		};
-		CC0002032F40000100000023 /* CalrAITests */ = {
-			isa = PBXGroup;
-			children = (
-				CC00000C2F4000010000000C /* FoodCacheTests.swift */,
-				CC00000D2F4000010000000D /* DiaryPersistenceTests.swift */,
-			);
-			path = CalrAITests;
-			sourceTree = "<group>";
-		};
 		1054E6642E3AC530006FBACF = {
 			isa = PBXGroup;
 			children = (
 				102AF5C62F197F3A002F2912 /* Assets.xcassets */,
-				1014750E2E8357320046DD0F /* Preview Content */,
 				1014750A2E8354750046DD0F /* Resources */,
 				101474FF2E8354670046DD0F /* Features */,
 				101474E82E83545A0046DD0F /* Core */,
@@ -379,6 +336,32 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		CC0002012F40000100000021 /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				CC0000082F40000100000008 /* LoginView.swift */,
+				CC0000092F40000100000009 /* RootView.swift */,
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
+		CC0002022F40000100000022 /* History */ = {
+			isa = PBXGroup;
+			children = (
+				CC00000A2F4000010000000A /* HistoryView.swift */,
+			);
+			path = History;
+			sourceTree = "<group>";
+		};
+		CC0002032F40000100000023 /* CalrAITests */ = {
+			isa = PBXGroup;
+			children = (
+				CC00000C2F4000010000000C /* FoodCacheTests.swift */,
+				CC00000D2F4000010000000D /* DiaryPersistenceTests.swift */,
+			);
+			path = CalrAITests;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -395,9 +378,6 @@
 			);
 			dependencies = (
 				108D75762F340E4E00A51AAC /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				102AF5C62F197F3A002F2912 /* Assets.xcassets */,
 			);
 			name = CalrAI;
 			packageProductDependencies = (
@@ -521,7 +501,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				102AF5C72F203AFE002F2912 /* Preview Assets.xcassets in Resources */,
+				102AF5C82F203AFE002F2912 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -556,7 +536,6 @@
 				101474E92E83545A0046DD0F /* UserProfile.swift in Sources */,
 				101474EA2E83545A0046DD0F /* SearchService.swift in Sources */,
 				101474EB2E83545A0046DD0F /* OFFSearchService.swift in Sources */,
-				108D755C2F340CD100A51AAC /* MacroSummaryWidget.swift in Sources */,
 				101475002E8354670046DD0F /* ProductRow.swift in Sources */,
 				101475012E8354670046DD0F /* SettingsView.swift in Sources */,
 				101475022E8354670046DD0F /* DiaryView.swift in Sources */,

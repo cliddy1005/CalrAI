@@ -68,7 +68,7 @@ final class CachedFood {
 
     /// Convert back to a Product for use in the existing app layer.
     func toProduct() -> Product {
-        ProductBuilder.build(
+        Product(
             barcode: barcode, name: name,
             kcalPer100g: kcalPer100g,
             proteinPer100g: proteinPer100g,

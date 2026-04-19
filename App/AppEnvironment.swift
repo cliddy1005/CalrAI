@@ -13,9 +13,19 @@ struct AppEnvironment {
 
     @MainActor
     static let live: AppEnvironment = {
-        let schema = Schema([CachedFood.self, DiaryEntry.self])
-        let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-        let container = try! ModelContainer(for: schema, configurations: [config])
+        let container: ModelContainer
+        do {
+            container = try ModelContainer(for: CachedFood.self, DiaryEntry.self)
+        } catch {
+            print("[AppEnvironment] Persistent ModelContainer failed: \(error). Falling back to in-memory.")
+            let inMemory = ModelConfiguration(isStoredInMemoryOnly: true)
+            do {
+                container = try ModelContainer(for: CachedFood.self, DiaryEntry.self,
+                                              configurations: inMemory)
+            } catch {
+                fatalError("[AppEnvironment] SwiftData schema is broken and cannot be loaded: \(error)")
+            }
+        }
         let localStore = LocalFoodStore(container: container)
         let offSearch = OFFSearchService()
         let foodRepo = CachedFoodRepository(remote: offSearch, local: localStore)
@@ -31,9 +41,9 @@ struct AppEnvironment {
     /// Creates an in-memory environment for testing.
     @MainActor
     static func forTesting() -> AppEnvironment {
-        let schema = Schema([CachedFood.self, DiaryEntry.self])
-        let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
-        let container = try! ModelContainer(for: schema, configurations: [config])
+        let inMemory = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try! ModelContainer(for: CachedFood.self, DiaryEntry.self,
+                                           configurations: inMemory)
         let localStore = LocalFoodStore(container: container)
         let offSearch = OFFSearchService()
         let foodRepo = CachedFoodRepository(remote: offSearch, local: localStore)
@@ -49,7 +59,7 @@ struct AppEnvironment {
 
 // EnvironmentKey to access AppEnvironment from any View
 private struct AppEnvironmentKey: EnvironmentKey {
-    @MainActor static let defaultValue: AppEnvironment = .live
+    nonisolated(unsafe) static let defaultValue: AppEnvironment = MainActor.assumeIsolated { .live }
 }
 extension EnvironmentValues {
     var appEnvironment: AppEnvironment {

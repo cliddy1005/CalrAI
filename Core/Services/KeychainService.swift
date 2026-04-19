@@ -41,6 +41,7 @@ enum KeychainService {
 
     // MARK: - Convenience for String values
 
+    @discardableResult
     static func saveString(_ value: String, forKey key: String) -> Bool {
         guard let data = value.data(using: .utf8) else { return false }
         return save(key: key, data: data)

@@ -257,7 +257,7 @@ private struct AddFoodMenu: View {
             Button(action: onSearch) { Label("Search Food",  systemImage: "magnifyingglass") }
             Button(action: onManual) { Label("Add Manually", systemImage: "pencil") }
         } label: {
-            Label("Add Food", systemImage: "plus.circle").foregroundStyle(.accentColor)
+            Label("Add Food", systemImage: "plus.circle").foregroundStyle(.tint)
         }
     }
 }
