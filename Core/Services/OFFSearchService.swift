@@ -30,7 +30,7 @@ struct OFFSearchService: SearchService {
             .init(name: "search_terms", value: q),
             .init(name: "page_size", value: "30"),
             .init(name: "sort_by", value: "unique_scans_n"),
-            .init(name: "fields", value: "code,product_name_en,nutriscore_grade,nutriments.energy-kcal_100g"),
+            .init(name: "fields", value: "code,product_name_en,product_name,brands,nutriscore_grade,nutriments,unique_scans_n"),
             .init(name: "languages_tags", value: langList())
         ]
 
